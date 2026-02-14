@@ -1,0 +1,6 @@
+
+{
+  "name": "SharedPantry",
+  "description": "An elegant, responsive shared grocery shopping list app with local persistence and AI-powered categorization.",
+  "requestFramePermissions": []
+}
