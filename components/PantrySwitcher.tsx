@@ -43,7 +43,7 @@ export const PantrySwitcher: React.FC = () => {
                     </svg>
                 </div>
                 <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">
-                    Tap to change pantries
+                    Tap to switch pantries
                 </p>
             </button>
 

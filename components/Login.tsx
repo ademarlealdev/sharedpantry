@@ -52,14 +52,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="flex-1 flex flex-col items-center justify-center px-8 bg-slate-50/50">
       <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="text-center mb-12">
-          <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl shadow-emerald-500/10 flex items-center justify-center text-5xl mx-auto mb-6 soft-bounce">
+          <div className="text-6xl mx-auto mb-6 soft-bounce">
             🏠
           </div>
           <h1 className="text-4xl font-[900] text-slate-900 tracking-tighter mb-2">
             {isRegistering ? 'Create Account' : 'Welcome'}
           </h1>
           <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
-            {isRegistering ? 'Join your family pantry' : 'Manage your kitchen together'}
+            {isRegistering ? 'Join your family pantry' : 'Manage your pantries together'}
           </p>
         </div>
 
