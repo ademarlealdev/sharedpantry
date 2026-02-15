@@ -530,11 +530,14 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateItem = async (id: string, updates: Partial<GroceryItem>) => {
     const item = state.items.find(i => i.id === id);
     setState(prev => ({ ...prev, items: prev.items.map(i => i.id === id ? { ...i, ...updates } : i) }));
+
     const dbUpdates: any = {};
-    if (updates.name) dbUpdates.name = updates.name;
-    if (updates.category) dbUpdates.category = updates.category;
-    if (updates.icon) dbUpdates.icon = updates.icon;
-    if (updates.qtyValue) dbUpdates.qty_value = updates.qtyValue;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.category !== undefined) dbUpdates.category = updates.category;
+    if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
+    if (updates.qtyValue !== undefined) dbUpdates.qty_value = updates.qtyValue;
+    if (updates.qtyUnit !== undefined) dbUpdates.qty_unit = updates.qtyUnit;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
     if (updates.isBought !== undefined) dbUpdates.is_bought = updates.isBought;
 
     const { error } = await supabase.from('grocery_items').update(dbUpdates).eq('id', id);
