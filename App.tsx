@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { MobileContainer } from './components/Layout';
+import { PantryLogo } from './components/ui/Logo';
 import { useSyncStore } from './store/useSyncStore';
 import { GroceryList } from './components/GroceryList';
 import { AddBar } from './components/AddBar';
 import { Login } from './components/Login';
 import { ProfileView } from './components/ProfileView';
 import { Button } from './components/ui/Button';
-import { PantryLogo } from './components/ui/Logo';
 import { PantrySwitcher } from './components/PantrySwitcher';
 
 const App: React.FC = () => {
@@ -105,7 +105,9 @@ const App: React.FC = () => {
         {view === 'list' ? (
           state.pantries.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
-              <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-5xl shadow-inner">📭</div>
+              <div className="w-24 h-24 flex items-center justify-center">
+                <PantryLogo className="w-20 h-20 soft-bounce" />
+              </div>
               <div className="space-y-2">
                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">No Pantry Found</h2>
                 <p className="text-slate-500 text-sm max-w-[240px] font-medium leading-relaxed">Create your first pantry or join one with a code to start adding items.</p>
