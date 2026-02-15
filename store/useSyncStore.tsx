@@ -224,6 +224,19 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const createPantry = async (name: string) => {
     if (!state.user) return;
+
+    // Check if user already has a pantry with this name
+    const { data: existing, error: checkError } = await supabase
+      .from('pantries')
+      .select('id')
+      .eq('created_by', state.user.id)
+      .ilike('name', name.trim())
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error(`You already have a pantry named "${name}".`);
+    }
+
     const { data: pantry, error } = await supabase.from('pantries').insert({ name, created_by: state.user.id }).select().single();
     if (error) throw error;
     await supabase.from('pantry_members').insert({ pantry_id: pantry.id, user_id: state.user.id, role: 'Administrator' });
@@ -233,11 +246,62 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const joinPantry = async (code: string) => {
     if (!state.user) return;
-    const { data: pantry, error: pError } = await supabase.from('pantries').select('id').eq('invite_code', code.trim()).single();
-    if (pError) throw new Error("Invalid code");
-    await supabase.from('pantry_members').insert({ pantry_id: pantry.id, user_id: state.user.id, role: 'Member' });
+
+    const cleanCode = code.trim().toUpperCase();
+    console.log(`[SyncStore] Attempting to join pantry with code: ${cleanCode}`);
+
+    // Step 1: Find the pantry by code
+    const { data: pantry, error: pError } = await supabase
+      .from('pantries')
+      .select('id, name, created_by')
+      .eq('invite_code', cleanCode)
+      .single();
+
+    if (pError) {
+      console.error("[SyncStore] Pantry lookup failed:", pError);
+      if (pError.code === 'PGRST116') throw new Error("Invalid invite code. Please check and try again.");
+      throw new Error("Could not find pantry. This might be a permission issue.");
+    }
+
+    // Step 2: Prevent owner from joining their own pantry via code
+    if (pantry.created_by === state.user.id) {
+      throw new Error("You are already the owner of this pantry.");
+    }
+
+    // Step 3: Check if already a member to avoid primary key conflicts
+    const { data: existingMember } = await supabase
+      .from('pantry_members')
+      .select('role')
+      .eq('pantry_id', pantry.id)
+      .eq('user_id', state.user.id)
+      .maybeSingle();
+
+    if (existingMember) {
+      console.log("[SyncStore] User is already a member, just switching active pantry.");
+    } else {
+      // Step 3: Insert the new membership record
+      const { error: mError } = await supabase
+        .from('pantry_members')
+        .insert({
+          pantry_id: pantry.id,
+          user_id: state.user.id,
+          role: 'Member'
+        });
+
+      if (mError) {
+        console.error("[SyncStore] Failed to join pantry:", mError);
+        throw new Error(`Failed to join: ${mError.message}`);
+      }
+    }
+
+    // Step 4: Refresh local state and switch
     const userPantries = await fetchPantries(state.user.id);
-    setState(prev => ({ ...prev, pantries: userPantries, activePantryId: pantry.id }));
+    setState(prev => ({
+      ...prev,
+      pantries: userPantries,
+      activePantryId: pantry.id,
+      items: [] // Clear items to trigger fresh fetch for the new pantry
+    }));
   };
 
   const leavePantry = async (id: string) => {

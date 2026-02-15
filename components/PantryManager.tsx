@@ -13,6 +13,8 @@ export const PantryManager: React.FC = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [isJoining, setIsJoining] = useState(false);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [createError, setCreateError] = useState<string | null>(null);
+    const [joinError, setJoinError] = useState<string | null>(null);
 
     // Custom Modal States
     const [pendingDelete, setPendingDelete] = useState<{ id: string, name: string } | null>(null);
@@ -52,6 +54,7 @@ export const PantryManager: React.FC = () => {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        setCreateError(null);
         if (!pantryName.trim()) return;
         setIsCreating(true);
         try {
@@ -59,6 +62,7 @@ export const PantryManager: React.FC = () => {
             setPantryName('');
         } catch (err) {
             console.error(err);
+            setCreateError(err instanceof Error ? err.message : "Failed to create pantry.");
         } finally {
             setIsCreating(false);
         }
@@ -66,13 +70,15 @@ export const PantryManager: React.FC = () => {
 
     const handleJoin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setJoinError(null);
         if (!inviteCode.trim()) return;
         setIsJoining(true);
         try {
             await joinPantry(inviteCode);
             setInviteCode('');
         } catch (err) {
-            alert(err instanceof Error ? err.message : "Failed to join");
+            console.error(err);
+            setJoinError(err instanceof Error ? err.message : "Failed to join");
         } finally {
             setIsJoining(false);
         }
@@ -278,11 +284,18 @@ export const PantryManager: React.FC = () => {
                 <Card className="p-8 space-y-4">
                     <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Create New</h4>
                     <form onSubmit={handleCreate} className="space-y-3">
-                        <Input
-                            placeholder="e.g. Beach House"
-                            value={pantryName}
-                            onChange={(e) => setPantryName(e.target.value)}
-                        />
+                        <div className="space-y-1">
+                            <Input
+                                placeholder="e.g. Beach House"
+                                value={pantryName}
+                                onChange={(e) => setPantryName(e.target.value)}
+                            />
+                            {createError && (
+                                <p className="text-[10px] text-red-500 font-black uppercase tracking-wider px-1">
+                                    {createError}
+                                </p>
+                            )}
+                        </div>
                         <Button variant="secondary" fullWidth disabled={isCreating}>
                             {isCreating ? 'Creating...' : 'Create Pantry'}
                         </Button>
@@ -292,11 +305,18 @@ export const PantryManager: React.FC = () => {
                 <Card className="p-8 space-y-4 border-dashed border-2">
                     <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Join Shared</h4>
                     <form onSubmit={handleJoin} className="space-y-3">
-                        <Input
-                            placeholder="Paste 8-digit code"
-                            value={inviteCode}
-                            onChange={(e) => setInviteCode(e.target.value)}
-                        />
+                        <div className="space-y-1">
+                            <Input
+                                placeholder="Paste 8-digit code"
+                                value={inviteCode}
+                                onChange={(e) => setInviteCode(e.target.value)}
+                            />
+                            {joinError && (
+                                <p className="text-[10px] text-red-500 font-black uppercase tracking-wider px-1">
+                                    {joinError}
+                                </p>
+                            )}
+                        </div>
                         <Button variant="ghost" fullWidth disabled={isJoining} className="bg-slate-50 border-slate-200">
                             {isJoining ? 'Joining...' : 'Join with Code'}
                         </Button>
