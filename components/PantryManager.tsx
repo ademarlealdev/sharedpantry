@@ -256,8 +256,8 @@ export const PantryManager: React.FC = () => {
                 </div>
             </section>
 
-            {/* Invitation Details for Active Pantry */}
-            {activePantry && (
+            {/* Invitation Details - ONLY for Administrators */}
+            {activePantry && activePantry.userRole === 'Administrator' && (
                 <section className="bg-slate-900 rounded-[2.5rem] p-8 text-white space-y-4 shadow-xl shadow-slate-900/20">
                     <div className="flex items-center justify-between">
                         <div>
