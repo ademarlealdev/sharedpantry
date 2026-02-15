@@ -118,38 +118,29 @@ export const PantryManager: React.FC = () => {
                             </div>
 
                             <div className="flex items-center space-x-2 pt-2 border-t border-slate-100/50">
-                                <button
-                                    onClick={() => switchPantry(pantry.id)}
-                                    disabled={state.activePantryId === pantry.id}
-                                    className={`flex-1 text-[10px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-all ${state.activePantryId === pantry.id
-                                            ? 'bg-slate-50 text-slate-300'
-                                            : 'bg-white text-emerald-600 hover:bg-emerald-50 shadow-sm'
-                                        }`}
-                                >
-                                    {state.activePantryId === pantry.id ? 'Active' : 'Select'}
-                                </button>
-
                                 {pantry.createdBy === state.user?.id ? (
                                     <button
                                         onClick={() => handleDelete(pantry.id, pantry.name)}
                                         disabled={isDeleting === pantry.id}
-                                        className="px-4 py-2.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors active:scale-95"
+                                        className="flex-1 flex items-center justify-center space-x-2 py-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all active:scale-95 group/del"
                                         aria-label="Delete Pantry"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4 transition-transform group-hover/del:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Delete Space</span>
                                     </button>
                                 ) : (
                                     <button
                                         onClick={() => handleLeave(pantry.id, pantry.name)}
                                         disabled={isDeleting === pantry.id}
-                                        className="px-4 py-2.5 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-colors active:scale-95"
+                                        className="flex-1 flex items-center justify-center space-x-2 py-3 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all active:scale-95 group/leave"
                                         aria-label="Leave Pantry"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4 transition-transform group-hover/leave:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                         </svg>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Leave Space</span>
                                     </button>
                                 )}
                             </div>

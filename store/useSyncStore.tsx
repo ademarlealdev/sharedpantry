@@ -277,6 +277,11 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deletePantry = async (id: string) => {
     if (!state.user) return;
+
+    // Manual cascade delete
+    await supabase.from('grocery_items').delete().eq('pantry_id', id);
+    await supabase.from('pantry_members').delete().eq('pantry_id', id);
+
     const { error } = await supabase.from('pantries').delete().eq('id', id).eq('created_by', state.user.id);
     if (error) throw error;
 
@@ -349,8 +354,8 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   return (
-    <SyncStoreContext.Provider value= { value } >
-    { children }
+    <SyncStoreContext.Provider value={value} >
+      {children}
     </SyncStoreContext.Provider>
   );
 };
