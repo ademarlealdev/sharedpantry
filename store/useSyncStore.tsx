@@ -383,30 +383,44 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const fetchMembers = async (pantryId: string) => {
-    console.log(`[SyncStore] Fetching members for pantry: ${pantryId}`);
+    console.log(`[SyncStore] Fetching members for: ${pantryId}`);
 
-    // Join with profiles table to get full names. 
-    // This requires a public 'profiles' table to be setup in Supabase.
-    const { data, error } = await supabase
+    // 1. Fetch base members first (This should always work if RLS is correct)
+    const { data: members, error: mError } = await supabase
       .from('pantry_members')
-      .select(`
-        user_id,
-        role,
-        profiles (
-          full_name
-        )
-      `)
+      .select('user_id, role')
       .eq('pantry_id', pantryId);
 
-    if (error) {
-      console.error("[SyncStore] Error fetching members:", error);
-      throw error;
+    console.log(`[SyncStore] Raw members result:`, { members, mError });
+
+    if (mError) {
+      console.error("[SyncStore] Members fetch failed:", mError);
+      throw mError;
     }
 
-    const mappedMembers: FamilyMember[] = (data || []).map((m: any) => {
+    if (!members || members.length === 0) {
+      setState(prev => ({ ...prev, currentMembers: [] }));
+      return;
+    }
+
+    // 2. Fetch profiles separately (Robust against join/schema issues)
+    const userIds = members.map(m => m.user_id);
+    const { data: profiles, error: pError } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', userIds);
+
+    if (pError) {
+      console.warn("[SyncStore] Profiles fetch failed (likely SQL not applied):", pError);
+    }
+
+    // 3. Map and merge
+    const profileMap = new Map((profiles || []).map(p => [p.id, p.full_name]));
+
+    const mappedMembers: FamilyMember[] = members.map(m => {
       const isMe = m.user_id === state.user?.id;
-      // Get name from profiles join. Supabase JS returns profiles as an object or null.
-      const profileName = m.profiles?.[0]?.full_name || m.profiles?.full_name;
+      const profileName = profileMap.get(m.user_id);
+
       const name = profileName || (isMe ? state.user?.name : `User ${m.user_id.slice(0, 4)}`);
 
       return {
