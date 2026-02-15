@@ -225,23 +225,23 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const createPantry = async (name: string) => {
     if (!state.user) return;
 
-    // Check if user already has a pantry with this name
-    const { data: existing, error: checkError } = await supabase
-      .from('pantries')
-      .select('id')
-      .eq('created_by', state.user.id)
-      .ilike('name', name.trim())
-      .maybeSingle();
-
-    if (existing) {
-      throw new Error(`You already have a pantry named "${name}".`);
+    const trimmedName = name.trim();
+    // Local check across ALL pantries in state (owned and joined)
+    const isDuplicate = state.pantries.some(p => p.name.toLowerCase() === trimmedName.toLowerCase());
+    if (isDuplicate) {
+      throw new Error(`You already have a pantry named "${trimmedName}".`);
     }
 
-    const { data: pantry, error } = await supabase.from('pantries').insert({ name, created_by: state.user.id }).select().single();
+    const { data: pantry, error } = await supabase.from('pantries').insert({ name: trimmedName, created_by: state.user.id }).select().single();
     if (error) throw error;
     await supabase.from('pantry_members').insert({ pantry_id: pantry.id, user_id: state.user.id, role: 'Administrator' });
     const userPantries = await fetchPantries(state.user.id);
-    setState(prev => ({ ...prev, pantries: userPantries, activePantryId: pantry.id }));
+    setState(prev => ({
+      ...prev,
+      pantries: userPantries,
+      activePantryId: pantry.id,
+      items: [] // Ensure fresh start
+    }));
   };
 
   const joinPantry = async (code: string) => {
@@ -265,10 +265,16 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Step 2: Prevent owner from joining their own pantry via code
     if (pantry.created_by === state.user.id) {
-      throw new Error("You are already the owner of this pantry.");
+      throw new Error("You already own this space.");
     }
 
-    // Step 3: Check if already a member to avoid primary key conflicts
+    // Step 3: Check if already a member (locally first)
+    const isAlreadyMember = state.pantries.some(p => p.id === pantry.id);
+    if (isAlreadyMember) {
+      throw new Error(`You are already a member of "${pantry.name}".`);
+    }
+
+    // Double check with DB to be extra safe
     const { data: existingMember } = await supabase
       .from('pantry_members')
       .select('role')
@@ -277,24 +283,24 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       .maybeSingle();
 
     if (existingMember) {
-      console.log("[SyncStore] User is already a member, just switching active pantry.");
-    } else {
-      // Step 3: Insert the new membership record
-      const { error: mError } = await supabase
-        .from('pantry_members')
-        .insert({
-          pantry_id: pantry.id,
-          user_id: state.user.id,
-          role: 'Member'
-        });
-
-      if (mError) {
-        console.error("[SyncStore] Failed to join pantry:", mError);
-        throw new Error(`Failed to join: ${mError.message}`);
-      }
+      throw new Error(`You are already a member of "${pantry.name}".`);
     }
 
-    // Step 4: Refresh local state and switch
+    // Step 4: Insert the new membership record
+    const { error: mError } = await supabase
+      .from('pantry_members')
+      .insert({
+        pantry_id: pantry.id,
+        user_id: state.user.id,
+        role: 'Member'
+      });
+
+    if (mError) {
+      console.error("[SyncStore] Failed to join pantry:", mError);
+      throw new Error(`Failed to join: ${mError.message}`);
+    }
+
+    // Step 5: Refresh local state and switch
     const userPantries = await fetchPantries(state.user.id);
     setState(prev => ({
       ...prev,
