@@ -48,7 +48,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                                     {displayedRole}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-bold italic">
-                                    {isOwner ? 'Primary Owner' : 'Space Member'}
+                                    {isOwner ? 'Primary Owner' : 'Pantry Member'}
                                 </span>
                             </div>
                         </div>
