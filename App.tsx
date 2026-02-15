@@ -94,7 +94,7 @@ const App: React.FC = () => {
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:inline">
               {state.user.name}
             </span>
-            <div className="w-9 h-9 bg-slate-900 flex items-center justify-center text-white font-black text-xs rounded-full shadow-sm shrink-0">
+            <div className="w-9 h-9 bg-[#4C6B51] flex items-center justify-center text-white font-black text-xs rounded-full shadow-sm shrink-0">
               {state.user.name[0]}
             </div>
           </button>
