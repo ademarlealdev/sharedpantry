@@ -385,13 +385,16 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const fetchMembers = async (pantryId: string) => {
     console.log(`[SyncStore] Fetching members for pantry: ${pantryId}`);
 
-    // Attempting to fetch members. We'll try to join with profiles if it exists, 
-    // or just return IDs if it doesn't.
+    // Join with profiles table to get full names. 
+    // This requires a public 'profiles' table to be setup in Supabase.
     const { data, error } = await supabase
       .from('pantry_members')
       .select(`
         user_id,
-        role
+        role,
+        profiles (
+          full_name
+        )
       `)
       .eq('pantry_id', pantryId);
 
@@ -400,13 +403,18 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       throw error;
     }
 
-    // For now, mapping to names from IDs since we don't have a profiles join yet.
-    // In a real app, you'd join with a 'profiles' table.
-    const mappedMembers: FamilyMember[] = (data || []).map(m => ({
-      id: m.user_id,
-      name: m.user_id === state.user?.id ? state.user.name : `User ${m.user_id.slice(0, 4)}`,
-      role: m.role as 'Administrator' | 'Member'
-    }));
+    const mappedMembers: FamilyMember[] = (data || []).map((m: any) => {
+      const isMe = m.user_id === state.user?.id;
+      // Get name from profiles join. Supabase JS returns profiles as an object or null.
+      const profileName = m.profiles?.[0]?.full_name || m.profiles?.full_name;
+      const name = profileName || (isMe ? state.user?.name : `User ${m.user_id.slice(0, 4)}`);
+
+      return {
+        id: m.user_id,
+        name,
+        role: m.role as 'Administrator' | 'Member'
+      };
+    });
 
     setState(prev => ({ ...prev, currentMembers: mappedMembers }));
   };
