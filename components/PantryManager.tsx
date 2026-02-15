@@ -329,22 +329,24 @@ export const PantryManager: React.FC = () => {
                             {activePantry.code}
                         </div>
                     </div>
-                    <div className="relative">
-                        <Button
-                            variant="primary"
-                            fullWidth
-                            onClick={copyInviteCode}
-                            className="bg-emerald-500 hover:bg-emerald-400 border-none text-[11px] font-black uppercase tracking-[0.2em] py-5 rounded-[1.5rem]"
-                        >
-                            Copy Shareable Link
-                        </Button>
-                        {showCopied && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-emerald-500 rounded-[1.5rem] animate-in fade-in zoom-in duration-200">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-white">
-                                    Invite code copied to clipboard!
-                                </span>
-                            </div>
-                        )}
+                    <div className="flex justify-center">
+                        <div className="relative w-72 max-w-full">
+                            <Button
+                                variant="primary"
+                                fullWidth
+                                onClick={copyInviteCode}
+                                className="bg-emerald-500 hover:bg-emerald-400 border-none text-[11px] font-black uppercase tracking-[0.2em] py-5 rounded-[1.5rem]"
+                            >
+                                Copy Shareable Link
+                            </Button>
+                            {showCopied && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-emerald-500 rounded-[1.5rem] animate-in fade-in zoom-in duration-200">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                                        Invite code copied to clipboard!
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </section>
             )}
