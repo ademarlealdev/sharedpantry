@@ -411,15 +411,13 @@ export const PantryManager: React.FC = () => {
                                         </div>
 
                                         {isPantryOwner && !isMe && (
-                                            <Button
-                                                variant="danger"
-                                                size="sm"
+                                            <button
                                                 onClick={() => handleRemoveMember(member.id)}
                                                 disabled={isRemovingMember === member.id}
-                                                className="px-4 py-2 text-[9px] font-black uppercase tracking-widest opacity-0 group-hover/mbr:opacity-100 transition-opacity"
+                                                className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 disabled:opacity-50 transition-colors px-2"
                                             >
                                                 {isRemovingMember === member.id ? '...' : 'Remove'}
-                                            </Button>
+                                            </button>
                                         )}
                                     </div>
                                 );

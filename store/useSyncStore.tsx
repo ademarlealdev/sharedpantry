@@ -171,6 +171,43 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, [fetchPantries]);
 
+  // Membership Sync Effect (Real-time gain/loss of pantry access)
+  useEffect(() => {
+    if (!state.user?.id) return;
+
+    console.log(`[SyncStore] Setting up membership sync for ${state.user.id}`);
+
+    const membershipSubscription = supabase
+      .channel(`membership:${state.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pantry_members',
+          filter: `user_id=eq.${state.user.id}`
+        },
+        async (payload) => {
+          console.log("[SyncStore] Membership change detected:", payload.eventType);
+          // Refresh the pantry list whenever our membership changes
+          const userPantries = await fetchPantries(state.user!.id);
+          setState(prev => ({
+            ...prev,
+            pantries: userPantries,
+            // If the active pantry was the one removed, switch away
+            activePantryId: userPantries.some(p => p.id === prev.activePantryId)
+              ? prev.activePantryId
+              : (userPantries.length > 0 ? userPantries[0].id : null)
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      membershipSubscription.unsubscribe();
+    };
+  }, [state.user?.id, fetchPantries]);
+
   // Data Sync Effect
   useEffect(() => {
     if (!state.user || !state.activePantryId) return;
