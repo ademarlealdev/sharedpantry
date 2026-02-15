@@ -219,7 +219,7 @@ export const PantryManager: React.FC = () => {
             {/* Active Pantry & Switcher */}
             <section className="space-y-4">
                 <div className="flex items-center justify-between px-1">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manage your pantries</h3>
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manage Shared Pantries</h3>
                     <span className="text-[9px] bg-emerald-100 px-2 py-0.5 rounded-md font-black text-emerald-600">
                         {state.pantries.length} TOTAL
                     </span>
