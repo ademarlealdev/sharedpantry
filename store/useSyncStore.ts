@@ -79,51 +79,58 @@ export const useSyncStore = () => {
 
   // Auth Effect
   useEffect(() => {
-    let fired = false;
+    // Keep track of the last processed user ID to avoid redundant pantry fetches
+    let lastProcessedUserId: string | null = null;
 
     const handleSession = async (session: any) => {
-      if (fired) return;
-      fired = true;
-
       try {
         if (session?.user) {
           const userId = session.user.id;
 
-          setState(prev => ({
-            ...prev,
-            user: {
-              id: userId,
-              name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
-              role: 'Administrator'
-            }
-          }));
-
-          try {
-            let userPantries = await fetchPantries(userId);
-            let activeId = userPantries.length > 0 ? userPantries[0].id : null;
-
-            if (!activeId) {
-              activeId = await ensureDefaultPantry(userId, userPantries);
-              userPantries = await fetchPantries(userId);
-            }
-
-            const uniquePantries = Array.from(new Map(
-              (userPantries as FamilyGroup[])
-                .filter(p => p && p.id)
-                .map(p => [p.id, p])
-            ).values());
-
-            setState(prev => ({
+          // Update user state immediately if it changed
+          setState(prev => {
+            if (prev.user?.id === userId) return prev;
+            return {
               ...prev,
-              pantries: uniquePantries,
-              activePantryId: activeId || (uniquePantries.length > 0 ? uniquePantries[0].id : null),
-              isInitialized: true
-            }));
-          } catch (pantryErr) {
-            console.error("[SyncStore] Background pantry fetch failed:", pantryErr);
-            setState(prev => ({ ...prev, isInitialized: true }));
+              user: {
+                id: userId,
+                name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
+                role: 'Administrator'
+              }
+            };
+          });
+
+          // Only fetch pantries if this is a new session for this user
+          if (lastProcessedUserId !== userId) {
+            lastProcessedUserId = userId;
+            try {
+              let userPantries = await fetchPantries(userId);
+              let activeId = userPantries.length > 0 ? userPantries[0].id : null;
+
+              if (!activeId) {
+                activeId = await ensureDefaultPantry(userId, userPantries);
+                userPantries = await fetchPantries(userId);
+              }
+
+              const uniquePantries = Array.from(new Map(
+                (userPantries as FamilyGroup[])
+                  .filter(p => p && p.id)
+                  .map(p => [p.id, p])
+              ).values());
+
+              setState(prev => ({
+                ...prev,
+                pantries: uniquePantries,
+                activePantryId: activeId || (uniquePantries.length > 0 ? uniquePantries[0].id : null),
+                isInitialized: true
+              }));
+            } catch (pantryErr) {
+              console.error("[SyncStore] Background pantry fetch failed:", pantryErr);
+              setState(prev => ({ ...prev, isInitialized: true }));
+            }
           }
         } else {
+          lastProcessedUserId = null;
           setState({ ...INITIAL_STATE, isInitialized: true });
         }
       } catch (err) {
@@ -134,21 +141,24 @@ export const useSyncStore = () => {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+      console.log("[SyncStore] Auth Event:", event);
+      if (
+        event === 'SIGNED_IN' ||
+        event === 'INITIAL_SESSION' ||
+        event === 'TOKEN_REFRESHED' ||
+        event === 'USER_UPDATED'
+      ) {
         handleSession(session);
       } else if (event === 'SIGNED_OUT') {
+        lastProcessedUserId = null;
         setState({ ...INITIAL_STATE, isInitialized: true });
         setLoading(false);
       }
     });
 
+    // Initial check
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        handleSession(session);
-      } else {
-        setLoading(false);
-        setState(prev => ({ ...prev, isInitialized: true }));
-      }
+      handleSession(session);
     }).catch(() => setLoading(false));
 
     const timeout = setTimeout(() => {
