@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { PantryLogo } from './ui/Logo';
 import { supabase } from '../services/supabase';
 
 interface LoginProps {
@@ -49,17 +50,20 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50/50">
+    <div className="flex-1 overflow-y-auto bg-[#FDFBF7]">
       <div className="min-h-full flex flex-col items-center justify-center px-8 py-12">
         <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="text-center mb-12">
-            <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl shadow-emerald-500/10 flex items-center justify-center text-5xl mx-auto mb-6 soft-bounce">
-              🏠
+            <div className="flex items-center justify-center space-x-4 mb-8">
+              <div className="w-20 h-20 bg-white rounded-[2rem] shadow-xl shadow-[#8B5E3C]/5 flex items-center justify-center text-4xl soft-bounce">
+                🏠
+              </div>
+              <PantryLogo className="w-20 h-20 rounded-[2rem] shadow-xl shadow-[#8B5E3C]/5 soft-bounce" />
             </div>
             <h1 className="text-4xl font-[900] text-slate-900 tracking-tighter mb-2">
-              {isRegistering ? 'Create Account' : 'Welcome'}
+              {isRegistering ? 'Create Account' : 'Welcome to SharedPantry'}
             </h1>
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+            <p className="text-[#8B5E3C] font-black text-[10px] uppercase tracking-[0.2em] opacity-70">
               {isRegistering ? 'Join your family pantry' : 'Manage your pantries together'}
             </p>
           </div>

@@ -52,7 +52,11 @@ const App: React.FC = () => {
   return (
     <MobileContainer>
       <header className="w-full bg-[#FDFBF7]/90 backdrop-blur-xl sticky top-0 z-30 border-b border-[#E9E4D9]/50 shadow-sm">
-        <div className="max-w-5xl mx-auto px-6 pt-12 pb-6 flex justify-between items-center">
+        {/* Elegant top brand label */}
+        <div className="w-full flex justify-center py-3 border-b border-[#E9E4D9]/30">
+          <span className="text-[10px] font-black text-[#8B5E3C] uppercase tracking-[0.5em] opacity-80">SharedPantry</span>
+        </div>
+        <div className="max-w-5xl mx-auto px-6 pt-8 pb-6 flex justify-between items-center">
           <div className="flex items-center space-x-3.5 text-left min-w-0">
             {view === 'profile' ? (
               <div className="flex items-center space-x-3.5">
