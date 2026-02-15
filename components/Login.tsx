@@ -263,19 +263,21 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           )}
 
           <div className="mt-8 text-center space-y-6">
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">
-              {isRegistering ? 'Already have an account?' : 'New to SharedPantry?'}
-            </p>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setIsRegistering(!isRegistering);
-                setError(null);
-              }}
-              className="w-full py-4 border-2 border-emerald-500/20 text-emerald-600 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-emerald-50"
-            >
-              {isRegistering ? 'Back to Login' : 'Create Family Account'}
-            </Button>
+            <div className="pt-8 border-t border-slate-100">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">
+                {isRegistering ? 'Already have an account?' : 'New to SharedPantry?'}
+              </p>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setIsRegistering(!isRegistering);
+                  setError(null);
+                }}
+                className="w-full py-4 border-2 border-emerald-500/20 text-emerald-600 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-emerald-50"
+              >
+                {isRegistering ? 'Back to Login' : 'Create Family Account'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
