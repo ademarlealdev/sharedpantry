@@ -7,7 +7,16 @@ import { Input } from './ui/Input';
 import { Modal } from './ui/Modal';
 
 export const PantryManager: React.FC = () => {
-    const { state, createPantry, joinPantry, switchPantry, deletePantry, leavePantry } = useSyncStore();
+    const {
+        state,
+        createPantry,
+        joinPantry,
+        switchPantry,
+        deletePantry,
+        leavePantry,
+        fetchMembers,
+        removeMember
+    } = useSyncStore();
     const [pantryName, setPantryName] = useState('');
     const [inviteCode, setInviteCode] = useState('');
     const [isCreating, setIsCreating] = useState(false);
@@ -19,6 +28,9 @@ export const PantryManager: React.FC = () => {
     // Custom Modal States
     const [pendingDelete, setPendingDelete] = useState<{ id: string, name: string } | null>(null);
     const [pendingLeave, setPendingLeave] = useState<{ id: string, name: string } | null>(null);
+    const [viewingMembers, setViewingMembers] = useState<{ id: string, name: string, ownerId: string } | null>(null);
+    const [isRemovingMember, setIsRemovingMember] = useState<string | null>(null);
+    const [isFetchingMembers, setIsFetchingMembers] = useState(false);
 
     const activePantry = state.pantries.find(p => p.id === state.activePantryId);
 
@@ -49,6 +61,31 @@ export const PantryManager: React.FC = () => {
             alert(err instanceof Error ? err.message : "Failed to leave pantry.");
         } finally {
             setIsDeleting(null);
+        }
+    };
+
+    const handleShowMembers = async (pantry: any) => {
+        setViewingMembers({ id: pantry.id, name: pantry.name, ownerId: pantry.createdBy });
+        setIsFetchingMembers(true);
+        try {
+            await fetchMembers(pantry.id);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsFetchingMembers(false);
+        }
+    };
+
+    const handleRemoveMember = async (userId: string) => {
+        if (!viewingMembers) return;
+        setIsRemovingMember(userId);
+        try {
+            await removeMember(viewingMembers.id, userId);
+        } catch (err) {
+            console.error(err);
+            alert(err instanceof Error ? err.message : "Failed to remove member.");
+        } finally {
+            setIsRemovingMember(null);
         }
     };
 
@@ -219,6 +256,20 @@ export const PantryManager: React.FC = () => {
                             </div>
 
                             <div className="flex items-center space-x-2 pt-2 border-t border-slate-100/50">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleShowMembers(pantry);
+                                    }}
+                                    className="flex-1 flex items-center justify-center space-x-2 py-3 bg-slate-50 text-slate-500 hover:bg-slate-100 rounded-xl transition-all active:scale-95 group/members"
+                                    aria-label="View Members"
+                                >
+                                    <svg className="w-4 h-4 transition-transform group-hover/members:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Members</span>
+                                </button>
+
                                 {pantry.createdBy === state.user?.id ? (
                                     <button
                                         onClick={(e) => {
@@ -226,13 +277,12 @@ export const PantryManager: React.FC = () => {
                                             setPendingDelete({ id: pantry.id, name: pantry.name });
                                         }}
                                         disabled={isDeleting === pantry.id}
-                                        className="flex-1 flex items-center justify-center space-x-2 py-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all active:scale-95 group/del"
+                                        className="flex-[0.6] flex items-center justify-center space-x-2 py-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all active:scale-95 group/del"
                                         aria-label="Delete Pantry"
                                     >
                                         <svg className="w-4 h-4 transition-transform group-hover/del:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Delete Space</span>
                                     </button>
                                 ) : (
                                     <button
@@ -241,13 +291,12 @@ export const PantryManager: React.FC = () => {
                                             setPendingLeave({ id: pantry.id, name: pantry.name });
                                         }}
                                         disabled={isDeleting === pantry.id}
-                                        className="flex-1 flex items-center justify-center space-x-2 py-3 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all active:scale-95 group/leave"
+                                        className="flex-[0.6] flex items-center justify-center space-x-2 py-3 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all active:scale-95 group/leave"
                                         aria-label="Leave Pantry"
                                     >
                                         <svg className="w-4 h-4 transition-transform group-hover/leave:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                         </svg>
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Leave Space</span>
                                     </button>
                                 )}
                             </div>
@@ -323,6 +372,137 @@ export const PantryManager: React.FC = () => {
                     </form>
                 </Card>
             </div>
+
+            {/* Modal: View Members */}
+            <Modal
+                isOpen={!!viewingMembers}
+                onClose={() => setViewingMembers(null)}
+                title={viewingMembers ? `Participants: ${viewingMembers.name}` : 'Participants'}
+            >
+                <div className="space-y-6">
+                    {isFetchingMembers ? (
+                        <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                            <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Fetching Space Crew...</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                            {state.currentMembers.map((member) => {
+                                const isMe = member.id === state.user?.id;
+                                const isPantryOwner = viewingMembers?.ownerId === state.user?.id;
+                                const isThisMemberOwner = member.role === 'Administrator';
+
+                                return (
+                                    <div key={member.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-[1.5rem] border border-slate-100 transition-all hover:bg-white hover:shadow-sm group/mbr">
+                                        <div className="flex items-center space-x-3">
+                                            <div className={`w-11 h-11 rounded-2xl shadow-inner flex items-center justify-center text-xl border ${isThisMemberOwner ? 'bg-emerald-50 border-emerald-100' : 'bg-white border-slate-200'}`}>
+                                                {isThisMemberOwner ? '👑' : '🧑‍🍳'}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-[900] text-slate-800 tracking-tight leading-none">
+                                                    {member.name} {isMe && <span className="text-emerald-500 ml-1">(You)</span>}
+                                                </p>
+                                                <div className="flex items-center space-x-2 mt-1.5">
+                                                    <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${isThisMemberOwner ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                                                        {member.role}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {isPantryOwner && !isMe && (
+                                            <Button
+                                                variant="danger"
+                                                size="sm"
+                                                onClick={() => handleRemoveMember(member.id)}
+                                                disabled={isRemovingMember === member.id}
+                                                className="px-4 py-2 text-[9px] font-black uppercase tracking-widest opacity-0 group-hover/mbr:opacity-100 transition-opacity"
+                                            >
+                                                {isRemovingMember === member.id ? '...' : 'Remove'}
+                                            </Button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    <Button variant="secondary" fullWidth onClick={() => setViewingMembers(null)} className="rounded-2xl py-4 font-black uppercase tracking-widest text-[10px]">
+                        Close
+                    </Button>
+                </div>
+            </Modal>
+
+            {/* Modal: Confirm Delete */}
+            <Modal
+                isOpen={!!pendingDelete}
+                onClose={() => setPendingDelete(null)}
+                title="Delete Space Permanently?"
+            >
+                <div className="space-y-6">
+                    <div className="p-6 bg-red-50 rounded-3xl border border-red-100 space-y-3">
+                        <p className="text-red-800 text-sm font-bold leading-relaxed">
+                            You are about to delete <span className="font-black underline italic">"{pendingDelete?.name}"</span>.
+                            This will remove all items and shared access for everyone. This cannot be undone.
+                        </p>
+                    </div>
+                    <div className="flex flex-col space-y-3">
+                        <Button
+                            variant="danger"
+                            fullWidth
+                            onClick={onConfirmDelete}
+                            disabled={!!isDeleting}
+                            className="py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em]"
+                        >
+                            {isDeleting ? 'Deleting Space...' : 'Yes, Delete Everything'}
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => setPendingDelete(null)}
+                            disabled={!!isDeleting}
+                            className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400"
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Modal: Confirm Leave */}
+            <Modal
+                isOpen={!!pendingLeave}
+                onClose={() => setPendingLeave(null)}
+                title="Leave this Space?"
+            >
+                <div className="space-y-6">
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-3">
+                        <p className="text-slate-600 text-sm font-bold leading-relaxed">
+                            You will lose access to <span className="font-black underline italic">"{pendingLeave?.name}"</span> and all its items.
+                            You'll need a new invite code to come back.
+                        </p>
+                    </div>
+                    <div className="flex flex-col space-y-3">
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={onConfirmLeave}
+                            disabled={!!isDeleting}
+                            className="py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] bg-slate-900"
+                        >
+                            {isDeleting ? 'Leaving...' : 'Confirm Leave'}
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => setPendingLeave(null)}
+                            disabled={!!isDeleting}
+                            className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400"
+                        >
+                            Stay Here
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

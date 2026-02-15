@@ -46,5 +46,6 @@ export interface AppState {
   pantries: FamilyGroup[];
   activePantryId: string | null;
   items: GroceryItem[];
+  currentMembers: FamilyMember[]; // Members of the pantry being viewed/managed
   isInitialized: boolean;
 }

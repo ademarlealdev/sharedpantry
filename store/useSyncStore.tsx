@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { GroceryItem, AppState, FamilyGroup, CategoryType } from '../types';
+import { GroceryItem, AppState, FamilyGroup, CategoryType, FamilyMember } from '../types';
 import { supabase } from '../services/supabase';
 
 const INITIAL_STATE: AppState = {
@@ -8,6 +8,7 @@ const INITIAL_STATE: AppState = {
   pantries: [],
   activePantryId: null,
   items: [],
+  currentMembers: [],
   isInitialized: false
 };
 
@@ -27,6 +28,8 @@ interface SyncStoreContextType {
   switchPantry: (id: string) => void;
   leavePantry: (id: string) => Promise<void>;
   deletePantry: (id: string) => Promise<void>;
+  fetchMembers: (pantryId: string) => Promise<void>;
+  removeMember: (pantryId: string, userId: string) => Promise<void>;
 }
 
 const SyncStoreContext = createContext<SyncStoreContextType | undefined>(undefined);
@@ -375,8 +378,52 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const switchPantry = (id: string) => {
     setState(prev => {
       if (prev.activePantryId === id) return prev;
-      return { ...prev, activePantryId: id, items: [] };
+      return { ...prev, activePantryId: id, items: [], currentMembers: [] };
     });
+  };
+
+  const fetchMembers = async (pantryId: string) => {
+    console.log(`[SyncStore] Fetching members for pantry: ${pantryId}`);
+
+    // Attempting to fetch members. We'll try to join with profiles if it exists, 
+    // or just return IDs if it doesn't.
+    const { data, error } = await supabase
+      .from('pantry_members')
+      .select(`
+        user_id,
+        role
+      `)
+      .eq('pantry_id', pantryId);
+
+    if (error) {
+      console.error("[SyncStore] Error fetching members:", error);
+      throw error;
+    }
+
+    // For now, mapping to names from IDs since we don't have a profiles join yet.
+    // In a real app, you'd join with a 'profiles' table.
+    const mappedMembers: FamilyMember[] = (data || []).map(m => ({
+      id: m.user_id,
+      name: m.user_id === state.user?.id ? state.user.name : `User ${m.user_id.slice(0, 4)}`,
+      role: m.role as 'Administrator' | 'Member'
+    }));
+
+    setState(prev => ({ ...prev, currentMembers: mappedMembers }));
+  };
+
+  const removeMember = async (pantryId: string, userId: string) => {
+    if (!state.user) return;
+
+    const { error } = await supabase
+      .from('pantry_members')
+      .delete()
+      .eq('pantry_id', pantryId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    // Refresh member list
+    await fetchMembers(pantryId);
   };
 
   const addItem = async (item: GroceryItem) => {
@@ -435,7 +482,8 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const value = {
     state, loading, dataLoading, login, logout,
     addItem, toggleItem, removeItem, updateItem, clearBought,
-    createPantry, joinPantry, switchPantry, leavePantry, deletePantry
+    createPantry, joinPantry, switchPantry, leavePantry, deletePantry,
+    fetchMembers, removeMember
   };
 
   return (
