@@ -16,12 +16,13 @@ export const PantryManager: React.FC = () => {
     const activePantry = state.pantries.find(p => p.id === state.activePantryId);
 
     const handleDelete = async (id: string, name: string) => {
-        if (!window.confirm(`Are you sure you want to permanently DELETE "${name}"? All items and members will be removed.`)) return;
+        if (!window.confirm(`Delete "${name}"?`)) return;
         setIsDeleting(id);
         try {
             await deletePantry(id);
         } catch (err) {
             console.error(err);
+            alert(err instanceof Error ? err.message : "Failed to delete pantry. You may need to remove items first.");
         } finally {
             setIsDeleting(null);
         }

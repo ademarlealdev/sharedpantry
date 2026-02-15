@@ -278,16 +278,33 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const deletePantry = async (id: string) => {
     if (!state.user) return;
 
-    // Manual cascade delete
-    await supabase.from('grocery_items').delete().eq('pantry_id', id);
-    await supabase.from('pantry_members').delete().eq('pantry_id', id);
+    // Step 1: Delete items
+    const { error: itemError } = await supabase.from('grocery_items').delete().eq('pantry_id', id);
+    if (itemError) {
+      console.warn("[SyncStore] Error clearing items before pantry delete:", itemError);
+    }
 
-    const { error } = await supabase.from('pantries').delete().eq('id', id).eq('created_by', state.user.id);
-    if (error) throw error;
+    // Step 2: Delete members
+    const { error: memError } = await supabase.from('pantry_members').delete().eq('pantry_id', id);
+    if (memError) {
+      console.warn("[SyncStore] Error clearing members before pantry delete:", memError);
+    }
+
+    // Step 3: Delete the pantry itself
+    const { error: pError } = await supabase.from('pantries').delete().eq('id', id).eq('created_by', state.user.id);
+    if (pError) {
+      console.error("[SyncStore] Failed to delete pantry record:", pError);
+      throw new Error(`Could not delete pantry: ${pError.message}`);
+    }
 
     const userPantries = await fetchPantries(state.user.id);
     const fallbackId = userPantries.length > 0 ? userPantries[0].id : null;
-    setState(prev => ({ ...prev, pantries: userPantries, activePantryId: fallbackId, items: [] }));
+    setState(prev => ({
+      ...prev,
+      pantries: userPantries,
+      activePantryId: fallbackId,
+      items: []
+    }));
   };
 
   const switchPantry = (id: string) => {
