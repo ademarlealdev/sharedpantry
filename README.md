@@ -1,10 +1,10 @@
 <div align="center">
-<img width="1200" height="475" alt="SharedPantry Banner" src="/C:/Users/_Utilizador_/.gemini/antigravity/brain/0af38e1c-95e2-4116-9dc5-7067bf5071c4/media__1771192218606.png" />
+<img width="800" alt="SharedPantry Banner" src="public/brand-banner.png" />
 
 # 🏠 SharedPantry
 **The elegant, AI-powered grocery shared list for families and households.**
 
-[View Application](https://ai.studio/apps/drive/1ATSmwc-02ci86VI-iAsYi0HVWPp_N8bZ)
+[View Application](https://sharedpantry.vercel.app)
 </div>
 
 ---
