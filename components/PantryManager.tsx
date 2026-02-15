@@ -351,7 +351,7 @@ export const PantryManager: React.FC = () => {
                     </form>
                 </Card>
 
-                <Card className="p-8 space-y-4 border-dashed border-2">
+                <Card className="p-8 space-y-4">
                     <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Join Shared</h4>
                     <form onSubmit={handleJoin} className="space-y-3">
                         <div className="space-y-1">
@@ -383,7 +383,7 @@ export const PantryManager: React.FC = () => {
                     {isFetchingMembers ? (
                         <div className="py-12 flex flex-col items-center justify-center space-y-4">
                             <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Fetching Space Crew...</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Fetching Pantry Crew...</p>
                         </div>
                     ) : (
                         <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
@@ -434,7 +434,7 @@ export const PantryManager: React.FC = () => {
             <Modal
                 isOpen={!!pendingDelete}
                 onClose={() => setPendingDelete(null)}
-                title="Delete Space Permanently?"
+                title="Delete Pantry Permanently?"
             >
                 <div className="space-y-6">
                     <div className="p-6 bg-red-50 rounded-3xl border border-red-100 space-y-3">
@@ -451,7 +451,7 @@ export const PantryManager: React.FC = () => {
                             disabled={!!isDeleting}
                             className="py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em]"
                         >
-                            {isDeleting ? 'Deleting Space...' : 'Yes, Delete Everything'}
+                            {isDeleting ? 'Deleting Pantry...' : 'Yes, Delete Everything'}
                         </Button>
                         <Button
                             variant="secondary"
@@ -470,7 +470,7 @@ export const PantryManager: React.FC = () => {
             <Modal
                 isOpen={!!pendingLeave}
                 onClose={() => setPendingLeave(null)}
-                title="Leave this Space?"
+                title="Leave this Pantry?"
             >
                 <div className="space-y-6">
                     <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-3">
@@ -487,7 +487,7 @@ export const PantryManager: React.FC = () => {
                             disabled={!!isDeleting}
                             className="py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] bg-slate-900"
                         >
-                            {isDeleting ? 'Leaving...' : 'Confirm Leave'}
+                            {isDeleting ? 'Leaving Pantry...' : 'Confirm Leave'}
                         </Button>
                         <Button
                             variant="secondary"

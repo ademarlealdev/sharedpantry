@@ -58,7 +58,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 {/* Pantry Management */}
                 <section className="space-y-4">
                     <div className="px-1">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manage Shared Spaces</h3>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manage Shared Pantries</h3>
                     </div>
                     <PantryManager />
                 </section>
