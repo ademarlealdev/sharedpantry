@@ -48,4 +48,5 @@ export interface AppState {
   items: GroceryItem[];
   currentMembers: FamilyMember[]; // Members of the pantry being viewed/managed
   isInitialized: boolean;
+  isRecoveryMode: boolean;
 }

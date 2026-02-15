@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { PantryLogo } from './ui/Logo';
+import { useSyncStore } from '../store/useSyncStore';
 import { supabase } from '../services/supabase';
 
 interface LoginProps {
@@ -10,6 +11,7 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const { state, resetRecoveryMode } = useSyncStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -19,17 +21,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [isRecovery, setIsRecovery] = useState(false);
   const [newPassword, setNewPassword] = useState('');
 
-  // Check if we're in password recovery mode
-  React.useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    if (type === 'recovery') {
-      setIsRecovery(true);
-    }
-  }, []);
+  // Check for updates
+  const isRecovery = state.isRecoveryMode;
 
   const handleForgotPassword = async () => {
     if (!email) {
@@ -72,8 +67,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       // Clear recovery mode and redirect after a short delay
       setTimeout(() => {
-        window.location.hash = '';
-        setIsRecovery(false);
+        resetRecoveryMode();
       }, 1500);
     } catch (err: any) {
       setError(err.message || "Failed to update password");

@@ -25,20 +25,6 @@ const App: React.FC = () => {
   } = useSyncStore();
 
   const [view, setView] = useState<'list' | 'profile'>('list');
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
-
-  // Check for password recovery mode
-  useEffect(() => {
-    const checkRecovery = () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = hashParams.get('type');
-      setIsRecoveryMode(type === 'recovery');
-    };
-
-    checkRecovery();
-    window.addEventListener('hashchange', checkRecovery);
-    return () => window.removeEventListener('hashchange', checkRecovery);
-  }, []);
 
   // Reset view to 'list' when user state changes (login/logout)
   useEffect(() => {
@@ -57,7 +43,7 @@ const App: React.FC = () => {
   }
 
   // Show login page if not authenticated OR in recovery mode
-  if (!state.user || isRecoveryMode) {
+  if (!state.user || state.isRecoveryMode) {
     return (
       <MobileContainer>
         <Login onLogin={login} />

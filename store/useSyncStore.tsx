@@ -9,7 +9,8 @@ const INITIAL_STATE: AppState = {
   activePantryId: null,
   items: [],
   currentMembers: [],
-  isInitialized: false
+  isInitialized: false,
+  isRecoveryMode: false
 };
 
 interface SyncStoreContextType {
@@ -31,6 +32,7 @@ interface SyncStoreContextType {
   fetchMembers: (pantryId: string) => Promise<void>;
   removeMember: (pantryId: string, userId: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
+  resetRecoveryMode: () => void;
 }
 
 const SyncStoreContext = createContext<SyncStoreContextType | undefined>(undefined);
@@ -162,6 +164,10 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } else if (event === 'SIGNED_OUT') {
         lastProcessedUserId = null;
         setState({ ...INITIAL_STATE, isInitialized: true });
+        setLoading(false);
+      } else if (event === 'PASSWORD_RECOVERY') {
+        console.log("[SyncStore] Password recovery mode detected");
+        setState(prev => ({ ...prev, isRecoveryMode: true, isInitialized: true }));
         setLoading(false);
       }
     });
@@ -573,11 +579,16 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [logout]);
 
+  const resetRecoveryMode = useCallback(() => {
+    setState(prev => ({ ...prev, isRecoveryMode: false }));
+    window.location.hash = '';
+  }, []);
+
   const value = {
     state, loading, dataLoading, login, logout,
     addItem, toggleItem, removeItem, updateItem, clearBought,
     createPantry, joinPantry, switchPantry, leavePantry, deletePantry,
-    fetchMembers, removeMember, deleteAccount
+    fetchMembers, removeMember, deleteAccount, resetRecoveryMode
   };
 
   return (
