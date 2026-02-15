@@ -8,6 +8,7 @@ import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Textarea } from './ui/Textarea';
 import { Card } from './ui/Card';
+import { PantryLogo } from './ui/Logo';
 
 interface ListProps {
   items: GroceryItem[];
@@ -217,7 +218,7 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center opacity-30 animate-in fade-in duration-700 -mt-20">
-              <div className="text-8xl mb-8 soft-bounce">🏠</div>
+              <PantryLogo className="w-24 h-24 mb-8 soft-bounce" />
               <p className="text-slate-500 font-black text-center text-xs uppercase tracking-[0.2em] leading-loose">
                 Your shared pantry is empty<br />Start adding items below
               </p>

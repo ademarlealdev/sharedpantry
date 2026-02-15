@@ -5,6 +5,7 @@ import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Modal } from './ui/Modal';
+import { PantryLogo } from './ui/Logo';
 
 export const PantryManager: React.FC = () => {
     const {
@@ -159,10 +160,14 @@ export const PantryManager: React.FC = () => {
                 }
             >
                 <div className="space-y-4 py-2">
-                    <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-2">
+                    <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
                         {isDeleting ? (
                             <div className="w-8 h-8 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div>
-                        ) : '🗑️'}
+                        ) : (
+                            <div className="w-10 h-10">
+                                <PantryLogo className="w-full h-full" />
+                            </div>
+                        )}
                     </div>
                     <p className="text-center text-slate-500 text-sm font-medium leading-relaxed">
                         {isDeleting
@@ -202,10 +207,14 @@ export const PantryManager: React.FC = () => {
                 }
             >
                 <div className="space-y-4 py-2">
-                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-2">
+                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
                         {isDeleting ? (
                             <div className="w-8 h-8 border-4 border-slate-400/20 border-t-slate-900 rounded-full animate-spin"></div>
-                        ) : '🚪'}
+                        ) : (
+                            <div className="w-10 h-10">
+                                <PantryLogo className="w-full h-full" />
+                            </div>
+                        )}
                     </div>
                     <p className="text-center text-slate-500 text-sm font-medium leading-relaxed">
                         {isDeleting
@@ -237,8 +246,10 @@ export const PantryManager: React.FC = () => {
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4 flex-1 text-left">
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${state.activePantryId === pantry.id ? 'bg-[#4C6B51] text-white shadow-xl shadow-[#4C6B51]/20' : 'bg-white text-slate-400'} shadow-sm border border-slate-100`}>
-                                        <span>{state.activePantryId === pantry.id ? '📍' : '🏠'}</span>
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${state.activePantryId === pantry.id ? 'bg-[#4C6B51] text-white shadow-xl shadow-[#4C6B51]/20 border-emerald-400/50' : 'bg-white text-slate-400 border-slate-100'} shadow-sm border`}>
+                                        <div className="w-6 h-6">
+                                            <PantryLogo className="w-full h-full" />
+                                        </div>
                                     </div>
                                     <div className="min-w-0 pr-4">
                                         <p className={`font-black tracking-tight truncate ${state.activePantryId === pantry.id ? 'text-slate-800' : 'text-slate-500'}`}>

@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useSyncStore } from '../store/useSyncStore';
+import { PantryLogo } from './ui/Logo';
 
 export const PantrySwitcher: React.FC = () => {
     const { state, switchPantry } = useSyncStore();
@@ -63,7 +64,9 @@ export const PantrySwitcher: React.FC = () => {
                                     }`}
                             >
                                 <div className="flex items-center space-x-3">
-                                    <span className="text-lg">{state.activePantryId === pantry.id ? '📍' : '🏠'}</span>
+                                    <div className="w-6 h-6 shrink-0">
+                                        <PantryLogo className="w-full h-full" />
+                                    </div>
                                     <span className="font-bold text-sm tracking-tight">{pantry.name}</span>
                                 </div>
                                 {state.activePantryId === pantry.id && (
