@@ -24,9 +24,9 @@ export const PantryManager: React.FC = () => {
         if (!pendingDelete) return;
         const { id } = pendingDelete;
         setIsDeleting(id);
-        setPendingDelete(null);
         try {
             await deletePantry(id);
+            setPendingDelete(null); // Success! Close modal
         } catch (err) {
             console.error(err);
             alert(err instanceof Error ? err.message : "Failed to delete pantry.");
@@ -39,9 +39,9 @@ export const PantryManager: React.FC = () => {
         if (!pendingLeave) return;
         const { id } = pendingLeave;
         setIsDeleting(id);
-        setPendingLeave(null);
         try {
             await leavePantry(id);
+            setPendingLeave(null); // Success!
         } catch (err) {
             console.error(err);
             alert(err instanceof Error ? err.message : "Failed to leave pantry.");
@@ -98,6 +98,7 @@ export const PantryManager: React.FC = () => {
                             variant="secondary"
                             fullWidth
                             onClick={() => setPendingDelete(null)}
+                            disabled={!!isDeleting}
                             className="rounded-2xl py-4"
                         >
                             Cancel
@@ -106,20 +107,25 @@ export const PantryManager: React.FC = () => {
                             variant="primary"
                             fullWidth
                             onClick={onConfirmDelete}
+                            isLoading={!!isDeleting}
                             className="bg-red-500 hover:bg-red-600 border-none rounded-2xl py-4"
                         >
-                            Delete
+                            {isDeleting ? 'Deleting...' : 'Delete'}
                         </Button>
                     </>
                 }
             >
                 <div className="space-y-4 py-2">
                     <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-2">
-                        🗑️
+                        {isDeleting ? (
+                            <div className="w-8 h-8 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div>
+                        ) : '🗑️'}
                     </div>
                     <p className="text-center text-slate-500 text-sm font-medium leading-relaxed">
-                        Are you sure you want to delete <span className="text-slate-900 font-black">"{pendingDelete?.name}"</span>?
-                        This action cannot be undone and will remove all items.
+                        {isDeleting
+                            ? "Cleaning up items and members..."
+                            : <>Are you sure you want to delete <span className="text-slate-900 font-black">"{pendingDelete?.name}"</span>? This action cannot be undone.</>
+                        }
                     </p>
                 </div>
             </Modal>
@@ -135,6 +141,7 @@ export const PantryManager: React.FC = () => {
                             variant="secondary"
                             fullWidth
                             onClick={() => setPendingLeave(null)}
+                            disabled={!!isDeleting}
                             className="rounded-2xl py-4"
                         >
                             Stay
@@ -143,20 +150,25 @@ export const PantryManager: React.FC = () => {
                             variant="primary"
                             fullWidth
                             onClick={onConfirmLeave}
+                            isLoading={!!isDeleting}
                             className="bg-slate-900 hover:bg-slate-800 border-none rounded-2xl py-4"
                         >
-                            Leave
+                            {isDeleting ? 'Leaving...' : 'Leave'}
                         </Button>
                     </>
                 }
             >
                 <div className="space-y-4 py-2">
                     <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-2">
-                        🚪
+                        {isDeleting ? (
+                            <div className="w-8 h-8 border-4 border-slate-400/20 border-t-slate-900 rounded-full animate-spin"></div>
+                        ) : '🚪'}
                     </div>
                     <p className="text-center text-slate-500 text-sm font-medium leading-relaxed">
-                        You will lose access to <span className="text-slate-900 font-black">"{pendingLeave?.name}"</span>.
-                        You'll need a new invite code to come back.
+                        {isDeleting
+                            ? "Updating workspace access..."
+                            : <>You will lose access to <span className="text-slate-900 font-black">"{pendingLeave?.name}"</span>. You'll need a new invite code to come back.</>
+                        }
                     </p>
                 </div>
             </Modal>

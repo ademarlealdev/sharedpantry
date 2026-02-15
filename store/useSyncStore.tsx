@@ -75,27 +75,6 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }));
   }, []);
 
-  const ensureDefaultPantry = async (userId: string, existingPantries: FamilyGroup[]) => {
-    if (existingPantries.length > 0) return existingPantries[0].id;
-
-    console.log("[SyncStore] Creating default pantry...");
-    const { data: pantry, error: pError } = await supabase
-      .from('pantries')
-      .insert({ name: 'My Pantry', created_by: userId })
-      .select()
-      .single();
-
-    if (pError) throw pError;
-
-    await supabase.from('pantry_members').insert({
-      pantry_id: pantry.id,
-      user_id: userId,
-      role: 'Administrator'
-    });
-
-    return pantry.id;
-  };
-
   // Auth Effect
   useEffect(() => {
     let lastProcessedUserId: string | null = null;
@@ -121,12 +100,6 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             lastProcessedUserId = userId;
             try {
               let userPantries = await fetchPantries(userId);
-              let activeId = userPantries.length > 0 ? userPantries[0].id : null;
-
-              if (!activeId) {
-                activeId = await ensureDefaultPantry(userId, userPantries);
-                userPantries = await fetchPantries(userId);
-              }
 
               const uniquePantries = Array.from(new Map(
                 (userPantries as FamilyGroup[])
@@ -134,10 +107,12 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                   .map(p => [p.id, p])
               ).values());
 
+              const activeId = uniquePantries.length > 0 ? uniquePantries[0].id : null;
+
               setState(prev => ({
                 ...prev,
                 pantries: uniquePantries,
-                activePantryId: activeId || (uniquePantries.length > 0 ? uniquePantries[0].id : null),
+                activePantryId: activeId,
                 isInitialized: true
               }));
             } catch (pantryErr) {
