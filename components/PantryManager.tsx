@@ -237,8 +237,8 @@ export const PantryManager: React.FC = () => {
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4 flex-1 text-left">
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${state.activePantryId === pantry.id ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400'
-                                        } shadow-sm`}>
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${state.activePantryId === pantry.id ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'bg-white text-slate-400'
+                                        } shadow-sm border border-slate-100`}>
                                         🏠
                                     </div>
                                     <div className="min-w-0 pr-4">

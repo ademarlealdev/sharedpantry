@@ -71,7 +71,7 @@ const App: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-3.5 min-w-0">
-                <div className="w-11 h-11 flex-shrink-0 flex items-center justify-center bg-emerald-50 rounded-2xl shadow-inner border border-emerald-100">
+                <div className="w-11 h-11 flex-shrink-0 flex items-center justify-center bg-slate-50 rounded-2xl shadow-inner border border-slate-100">
                   <span className="text-2xl">🏠</span>
                 </div>
                 <PantrySwitcher />
