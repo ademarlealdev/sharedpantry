@@ -32,6 +32,7 @@ export const PantryManager: React.FC = () => {
     const [viewingMembers, setViewingMembers] = useState<{ id: string, name: string, ownerId: string } | null>(null);
     const [isRemovingMember, setIsRemovingMember] = useState<string | null>(null);
     const [isFetchingMembers, setIsFetchingMembers] = useState(false);
+    const [showCopied, setShowCopied] = useState(false);
 
     const activePantry = state.pantries.find(p => p.id === state.activePantryId);
 
@@ -125,7 +126,8 @@ export const PantryManager: React.FC = () => {
     const copyInviteCode = () => {
         if (activePantry?.code) {
             navigator.clipboard.writeText(activePantry.code);
-            alert("Invite code copied to clipboard!");
+            setShowCopied(true);
+            setTimeout(() => setShowCopied(false), 2000);
         }
     };
 
@@ -327,20 +329,29 @@ export const PantryManager: React.FC = () => {
                             {activePantry.code}
                         </div>
                     </div>
-                    <Button
-                        variant="primary"
-                        fullWidth
-                        onClick={copyInviteCode}
-                        className="bg-emerald-500 hover:bg-emerald-400 border-none text-[11px] font-black uppercase tracking-[0.2em] py-5 rounded-[1.5rem]"
-                    >
-                        Copy Shareable Link
-                    </Button>
+                    <div className="relative">
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={copyInviteCode}
+                            className="bg-emerald-500 hover:bg-emerald-400 border-none text-[11px] font-black uppercase tracking-[0.2em] py-5 rounded-[1.5rem]"
+                        >
+                            Copy Shareable Link
+                        </Button>
+                        {showCopied && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-emerald-500 rounded-[1.5rem] animate-in fade-in zoom-in duration-200">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                                    Invite code copied to clipboard!
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </section>
             )}
 
             {/* Actions: Create or Join */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="p-8 space-y-4">
+                <Card className="p-6 space-y-4">
                     <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Create New</h4>
                     <form onSubmit={handleCreate} className="space-y-3">
                         <div className="space-y-1">
@@ -361,7 +372,7 @@ export const PantryManager: React.FC = () => {
                     </form>
                 </Card>
 
-                <Card className="p-8 space-y-4">
+                <Card className="p-6 space-y-4">
                     <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Join Shared</h4>
                     <form onSubmit={handleJoin} className="space-y-3">
                         <div className="space-y-1">

@@ -58,7 +58,7 @@ const App: React.FC = () => {
         <div className="w-full flex justify-center pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-[#E9E4D9]/30 bg-[#FDFBF7]/50">
           <span className="text-[11px] font-black text-[#4C6B51] uppercase tracking-[0.4em]">SharedPantry</span>
         </div>
-        <div className="w-full px-6 pt-8 pb-6 flex justify-between items-center">
+        <div className="w-full px-6 pt-8 pb-6 flex justify-between items-center min-h-[110px]">
           <div className="flex items-center space-x-3.5 text-left min-w-0">
             {view === 'profile' ? (
               <div className="flex items-center space-x-3.5">
