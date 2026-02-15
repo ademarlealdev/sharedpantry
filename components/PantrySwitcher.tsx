@@ -32,7 +32,7 @@ export const PantrySwitcher: React.FC = () => {
                 className="group flex flex-col items-start transition-all active:scale-95 text-left"
             >
                 <div className="flex items-center space-x-1">
-                    <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none group-hover:text-emerald-600 transition-colors">
+                    <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none group-hover:text-[#4C6B51] transition-colors">
                         {activePantry?.name || 'My Pantry'}
                     </h1>
                     <svg
@@ -42,7 +42,7 @@ export const PantrySwitcher: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
-                <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">
+                <p className="text-[9px] text-[#4C6B51] font-black uppercase tracking-[0.2em] mt-1">
                     Tap to switch pantries
                 </p>
             </button>
@@ -58,7 +58,7 @@ export const PantrySwitcher: React.FC = () => {
                                 key={pantry.id}
                                 onClick={() => handleSwitch(pantry.id)}
                                 className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all ${state.activePantryId === pantry.id
-                                    ? 'bg-emerald-50 text-emerald-700'
+                                    ? 'bg-[#F8F5EE] text-[#4C6B51]'
                                     : 'hover:bg-slate-50 text-slate-600'
                                     }`}
                             >
@@ -67,7 +67,7 @@ export const PantrySwitcher: React.FC = () => {
                                     <span className="font-bold text-sm tracking-tight">{pantry.name}</span>
                                 </div>
                                 {state.activePantryId === pantry.id && (
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm animate-pulse"></div>
+                                    <div className="w-2 h-2 rounded-full bg-[#4C6B51] shadow-sm animate-pulse"></div>
                                 )}
                             </button>
                         ))}

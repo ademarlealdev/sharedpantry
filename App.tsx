@@ -7,6 +7,7 @@ import { AddBar } from './components/AddBar';
 import { Login } from './components/Login';
 import { ProfileView } from './components/ProfileView';
 import { Button } from './components/ui/Button';
+import { PantryLogo } from './components/ui/Logo';
 import { PantrySwitcher } from './components/PantrySwitcher';
 
 const App: React.FC = () => {
@@ -50,7 +51,7 @@ const App: React.FC = () => {
 
   return (
     <MobileContainer>
-      <header className="w-full bg-white/80 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-100/50">
+      <header className="w-full bg-[#FDFBF7]/90 backdrop-blur-xl sticky top-0 z-30 border-b border-[#E9E4D9]/50 shadow-sm">
         <div className="max-w-5xl mx-auto px-6 pt-12 pb-6 flex justify-between items-center">
           <div className="flex items-center space-x-3.5 text-left min-w-0">
             {view === 'profile' ? (
@@ -66,14 +67,12 @@ const App: React.FC = () => {
                 </Button>
                 <div className="flex flex-col">
                   <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none">Settings</h1>
-                  <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">Collab Hub</p>
+                  <p className="text-[9px] text-[#4C6B51] font-black uppercase tracking-[0.2em] mt-1">SharedPantry</p>
                 </div>
               </div>
             ) : (
               <div className="flex items-center space-x-3.5 min-w-0">
-                <div className="w-11 h-11 flex-shrink-0 flex items-center justify-center bg-slate-50 rounded-2xl shadow-inner border border-slate-100">
-                  <span className="text-2xl">🏠</span>
-                </div>
+                <PantryLogo />
                 <PantrySwitcher />
               </div>
             )}
@@ -82,8 +81,8 @@ const App: React.FC = () => {
           <button
             onClick={() => setView(view === 'list' ? 'profile' : 'list')}
             className={`flex items-center space-x-3 pl-4 pr-1.5 py-1.5 rounded-full border-2 transition-all active:scale-95 ${view === 'profile'
-              ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-500/20'
-              : 'border-slate-100 bg-white hover:border-emerald-200'
+              ? 'border-[#4C6B51] bg-[#F8F5EE] shadow-lg shadow-[#4C6B51]/10'
+              : 'border-slate-100 bg-white hover:border-[#4C6B51]/30'
               }`}
           >
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:inline">
@@ -135,7 +134,7 @@ const App: React.FC = () => {
           />
         )}
       </div>
-    </MobileContainer>
+    </MobileContainer >
   );
 };
 
