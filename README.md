@@ -1,5 +1,5 @@
 <div align="center">
-<img width="1200" height="475" alt="SharedPantry Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" height="475" alt="SharedPantry Banner" src="/C:/Users/_Utilizador_/.gemini/antigravity/brain/0af38e1c-95e2-4116-9dc5-7067bf5071c4/media__1771192218606.png" />
 
 # 🏠 SharedPantry
 **The elegant, AI-powered grocery shared list for families and households.**
