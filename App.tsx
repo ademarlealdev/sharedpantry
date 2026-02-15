@@ -100,9 +100,9 @@ const App: React.FC = () => {
 
           <button
             onClick={() => setView(view === 'list' ? 'profile' : 'list')}
-            className={`flex items-center space-x-3 pl-4 pr-1.5 py-1.5 rounded-full border-2 transition-all active:scale-95 ${view === 'profile'
+            className={`flex items-center space-x-3 pl-4 pr-1.5 py-1.5 rounded-full border transition-all active:scale-95 ${view === 'profile'
               ? 'border-[#4C6B51] bg-[#F8F5EE] shadow-lg shadow-[#4C6B51]/10'
-              : 'border-slate-100 bg-white hover:border-[#4C6B51]/30'
+              : 'border-[#E9E4D9] bg-white hover:border-[#4C6B51]/30'
               }`}
           >
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:inline">

@@ -56,13 +56,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                         </Button>
                     </div>
                     <div className="bg-white p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-slate-100 shadow-sm">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex items-center space-x-4 sm:space-x-6">
-                                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-3xl sm:text-4xl shadow-inner border-2 ${isOwner ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                        <div className="flex items-center justify-between gap-3 flex-nowrap">
+                            <div className="flex items-center space-x-3 sm:space-x-6 min-w-0 flex-1">
+                                <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-3xl sm:text-4xl shadow-inner border-2 shrink-0 ${isOwner ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
                                     {isOwner ? '👑' : '🧑‍🍳'}
                                 </div>
-                                <div className="min-w-0">
-                                    <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight truncate">{user.name}</h2>
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="text-lg sm:text-2xl font-black text-slate-800 tracking-tight truncate">{user.name}</h2>
                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <span className={`px-2.5 py-1 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm ${isOwner ? 'bg-emerald-500' : 'bg-slate-400'}`}>
                                             {displayedRole}
