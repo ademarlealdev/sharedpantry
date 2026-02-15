@@ -49,6 +49,27 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
 
   // Scroll logic
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const navRef = React.useRef<HTMLDivElement>(null);
+  const [isNavDragging, setIsNavDragging] = useState(false);
+  const [navStartX, setNavStartX] = useState(0);
+  const [navScrollLeft, setNavScrollLeft] = useState(0);
+
+  const handleNavMouseDown = (e: React.MouseEvent) => {
+    setIsNavDragging(true);
+    setNavStartX(e.pageX - (navRef.current?.offsetLeft || 0));
+    setNavScrollLeft(navRef.current?.scrollLeft || 0);
+  };
+
+  const handleNavMouseMove = (e: React.MouseEvent) => {
+    if (!isNavDragging) return;
+    e.preventDefault();
+    const x = e.pageX - (navRef.current?.offsetLeft || 0);
+    const walk = (x - navStartX) * 1.5; // multiplier for scroll speed
+    if (navRef.current) navRef.current.scrollLeft = navScrollLeft - walk;
+  };
+
+  const stopNavDragging = () => setIsNavDragging(false);
+
   const prevItemsLength = React.useRef(items.length);
   const prevPantryId = React.useRef(state.activePantryId);
 
@@ -103,7 +124,14 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden relative">
       <nav className="w-full border-b border-slate-50 flex-none bg-white z-20">
-        <div className="max-w-5xl mx-auto overflow-x-auto w-full touch-pan-x pb-2 hide-scrollbar">
+        <div
+          ref={navRef}
+          onMouseDown={handleNavMouseDown}
+          onMouseMove={handleNavMouseMove}
+          onMouseUp={stopNavDragging}
+          onMouseLeave={stopNavDragging}
+          className={`max-w-5xl mx-auto overflow-x-auto w-full touch-pan-x pb-2 hide-scrollbar transition-all ${isNavDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+        >
           <div className="inline-flex px-6 py-4 gap-2 min-w-full">
             <CategoryPill
               id="cat-All"
