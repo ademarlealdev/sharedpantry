@@ -7,6 +7,7 @@ import { AddBar } from './components/AddBar';
 import { Login } from './components/Login';
 import { ProfileView } from './components/ProfileView';
 import { Button } from './components/ui/Button';
+import { PantrySwitcher } from './components/PantrySwitcher';
 
 const App: React.FC = () => {
   const {
@@ -27,8 +28,6 @@ const App: React.FC = () => {
   useEffect(() => {
     setView('list');
   }, [state.user?.id]);
-
-  const activePantry = state.pantries.find(p => p.id === state.activePantryId);
 
   if (loading) {
     return (
@@ -53,30 +52,31 @@ const App: React.FC = () => {
     <MobileContainer>
       <header className="w-full bg-white/80 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-100/50">
         <div className="max-w-5xl mx-auto px-6 pt-12 pb-6 flex justify-between items-center">
-          <div className="flex items-center space-x-3.5 text-left">
+          <div className="flex items-center space-x-3.5 text-left min-w-0">
             {view === 'profile' ? (
-              <Button
-                variant="icon"
-                onClick={() => setView('list')}
-                aria-label="Back to list"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
-                </svg>
-              </Button>
+              <div className="flex items-center space-x-3.5">
+                <Button
+                  variant="icon"
+                  onClick={() => setView('list')}
+                  aria-label="Back to list"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </Button>
+                <div className="flex flex-col">
+                  <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none">Settings</h1>
+                  <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">Collab Hub</p>
+                </div>
+              </div>
             ) : (
-              <div className="w-11 h-11 flex items-center justify-center bg-emerald-50 rounded-2xl shadow-inner border border-emerald-100">
-                <span className="text-2xl">🏠</span>
+              <div className="flex items-center space-x-3.5 min-w-0">
+                <div className="w-11 h-11 flex-shrink-0 flex items-center justify-center bg-emerald-50 rounded-2xl shadow-inner border border-emerald-100">
+                  <span className="text-2xl">🏠</span>
+                </div>
+                <PantrySwitcher />
               </div>
             )}
-            <div className="flex flex-col">
-              <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none">
-                {view === 'profile' ? 'Settings' : (activePantry?.name || 'My Pantry')}
-              </h1>
-              <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">
-                {view === 'profile' ? 'Collaborative Spaces' : 'Shared Grocery List'}
-              </p>
-            </div>
           </div>
 
           <button

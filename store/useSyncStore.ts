@@ -80,14 +80,16 @@ export const useSyncStore = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const userId = session.user.id;
-        const userPantries = await fetchPantries(userId);
-        let activeId = userPantries.length > 0 ? userPantries[0].id : null;
+        let userPantries = await fetchPantries(userId);
 
+        let activeId = userPantries.length > 0 ? userPantries[0].id : null;
         if (!activeId) {
           activeId = await ensureDefaultPantry(userId, userPantries);
+          userPantries = await fetchPantries(userId);
         }
 
-        const finalPantries = await fetchPantries(userId);
+        // Deduplicate just in case
+        const uniquePantries = Array.from(new Map(userPantries.map(p => [p.id, p])).values());
 
         setState(prev => ({
           ...prev,
@@ -96,7 +98,7 @@ export const useSyncStore = () => {
             name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
             role: 'Administrator'
           },
-          pantries: finalPantries,
+          pantries: uniquePantries,
           activePantryId: activeId,
           isInitialized: true
         }));
