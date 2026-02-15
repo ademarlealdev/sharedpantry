@@ -40,7 +40,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
     return (
         <div className="flex-1 overflow-y-auto bg-slate-50/30 animate-in slide-in-from-bottom-4 duration-300 pb-20">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-10">
+            <div className="w-full px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-10">
 
                 {/* Profile Card */}
                 <section className="space-y-4">

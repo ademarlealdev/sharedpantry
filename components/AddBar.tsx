@@ -80,6 +80,7 @@ export const AddBar: React.FC<AddBarProps> = ({ onAdd, onUpdate, userName, items
       isBought: false,
       addedBy: userName,
       createdAt: Date.now(),
+      pantryId: '', // Default placeholder, store handles the actual assignment
     };
 
     await onAdd(newItem);
@@ -99,7 +100,7 @@ export const AddBar: React.FC<AddBarProps> = ({ onAdd, onUpdate, userName, items
 
   return (
     <>
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-5xl pointer-events-none px-8">
+      <div className="fixed bottom-8 left-0 w-full pointer-events-none px-8">
         <Button
           onClick={() => setIsOpen(true)}
           className="float-right pointer-events-auto w-16 h-16 rounded-full shadow-[0_8px_30px_rgb(16,185,129,0.4)] z-40 group p-0"

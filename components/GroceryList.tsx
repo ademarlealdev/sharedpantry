@@ -130,7 +130,7 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
           onMouseMove={handleNavMouseMove}
           onMouseUp={stopNavDragging}
           onMouseLeave={stopNavDragging}
-          className={`max-w-5xl mx-auto overflow-x-auto w-full touch-pan-x pb-2 hide-scrollbar transition-all ${isNavDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+          className={`w-full overflow-x-auto touch-pan-x pb-2 hide-scrollbar transition-all ${isNavDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
         >
           <div className="inline-flex px-6 py-4 gap-2 min-w-full">
             <CategoryPill
@@ -167,7 +167,7 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
         ref={scrollRef}
         className={`flex-1 hide-scrollbar ${isEmpty ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}
       >
-        <div className={`max-w-5xl mx-auto px-6 space-y-6 pb-24 w-full ${isEmpty ? 'flex-1 flex flex-col items-center justify-center' : 'py-8'}`}>
+        <div className={`w-full px-6 space-y-6 pb-24 ${isEmpty ? 'flex-1 flex flex-col items-center justify-center' : 'py-8'}`}>
           {!isEmpty ? (
             <>
               {categories.map(cat => {
