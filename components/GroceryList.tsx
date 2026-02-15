@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useSyncStore } from '../store/useSyncStore';
 import { GroceryItem, CategoryType } from '../types';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
@@ -28,6 +29,7 @@ const UNITS = [
 ];
 
 export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, onUpdate, onClearBought }) => {
+  const { dataLoading, state } = useSyncStore();
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'All'>('All');
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null);
 
@@ -44,13 +46,22 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
       : activeItems.filter(i => i.category === selectedCategory),
     [activeItems, selectedCategory]);
 
-  // Scroll to bottom when items are added
+  // Scroll logic
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const prevItemsLength = React.useRef(items.length);
+  const prevPantryId = React.useRef(state.activePantryId);
 
   React.useEffect(() => {
+    // If pantry switched, scroll to top
+    if (state.activePantryId !== prevPantryId.current) {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      prevPantryId.current = state.activePantryId;
+      prevItemsLength.current = items.length;
+      return;
+    }
+
+    // If item added, scroll to bottom
     if (items.length > prevItemsLength.current) {
-      // Small timeout to allow render to finish
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -58,7 +69,7 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
       }, 100);
     }
     prevItemsLength.current = items.length;
-  }, [items.length]);
+  }, [items.length, state.activePantryId]);
 
   const handleUpdate = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -192,6 +203,11 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
                 </div>
               )}
             </>
+          ) : dataLoading ? (
+            <div className="flex flex-col items-center justify-center space-y-4 py-20">
+              <div className="w-10 h-10 border-4 border-slate-100 border-t-emerald-500 rounded-full animate-spin"></div>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest animate-pulse">Fetching items...</p>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center opacity-30 animate-in fade-in duration-700 -mt-20">
               <div className="text-8xl mb-8 soft-bounce">🏠</div>

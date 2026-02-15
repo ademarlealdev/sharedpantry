@@ -2,8 +2,8 @@
 import React from 'react';
 
 export const PantryLogo: React.FC<{ className?: string }> = ({ className = "w-11 h-11" }) => (
-    <div className={`${className} flex-shrink-0 flex items-center justify-center bg-[#FDFBF7] rounded-3xl shadow-sm border border-[#E9E4D9] p-[15%]`}>
-        <svg className="w-full h-full" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div className={`${className} flex-shrink-0 flex items-center justify-center bg-[#FDFBF7] rounded-3xl shadow-sm border border-[#E9E4D9]`}>
+        <svg width="38" height="38" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* House Outline */}
             <path d="M6 16L22 6L38 16V34C38 36.2091 36.2091 38 34 38H10C7.79086 38 6 36.2091 6 34V16Z" stroke="#8B5E3C" strokeWidth="2.5" strokeLinejoin="round" fill="white" />
 

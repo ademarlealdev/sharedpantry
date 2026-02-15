@@ -30,6 +30,7 @@ interface SyncStoreContextType {
   deletePantry: (id: string) => Promise<void>;
   fetchMembers: (pantryId: string) => Promise<void>;
   removeMember: (pantryId: string, userId: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const SyncStoreContext = createContext<SyncStoreContextType | undefined>(undefined);
@@ -549,11 +550,22 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     await supabase.from('grocery_items').delete().eq('is_bought', true).eq('pantry_id', state.activePantryId);
   };
 
+  const deleteAccount = useCallback(async () => {
+    try {
+      const { error } = await supabase.rpc('delete_own_user');
+      if (error) throw error;
+      await logout();
+    } catch (err: any) {
+      console.error("[SyncStore] Delete account failed:", err);
+      throw err;
+    }
+  }, [logout]);
+
   const value = {
     state, loading, dataLoading, login, logout,
     addItem, toggleItem, removeItem, updateItem, clearBought,
     createPantry, joinPantry, switchPantry, leavePantry, deletePantry,
-    fetchMembers, removeMember
+    fetchMembers, removeMember, deleteAccount
   };
 
   return (

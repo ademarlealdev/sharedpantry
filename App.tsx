@@ -20,7 +20,8 @@ const App: React.FC = () => {
     removeItem,
     updateItem,
     clearBought,
-    logout
+    logout,
+    deleteAccount
   } = useSyncStore();
 
   const [view, setView] = useState<'list' | 'profile'>('list');
@@ -30,7 +31,7 @@ const App: React.FC = () => {
     setView('list');
   }, [state.user?.id]);
 
-  if (loading) {
+  if (loading || !state.isInitialized) {
     return (
       <MobileContainer>
         <div className="flex-1 flex flex-col items-center justify-center">
@@ -135,6 +136,7 @@ const App: React.FC = () => {
             pantries={state.pantries}
             activePantryId={state.activePantryId}
             onLogout={logout}
+            onDeleteAccount={deleteAccount}
           />
         )}
       </div>
