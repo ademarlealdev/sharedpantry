@@ -79,7 +79,7 @@ const App: React.FC = () => {
             ) : (
               <div className="flex items-center space-x-3.5 min-w-0">
                 <PantryLogo />
-                <PantrySwitcher />
+                <PantrySwitcher onManageSettings={() => setView('profile')} />
               </div>
             )}
           </div>

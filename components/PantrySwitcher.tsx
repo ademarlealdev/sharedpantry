@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSyncStore } from '../store/useSyncStore';
 import { PantryLogo } from './ui/Logo';
 
-export const PantrySwitcher: React.FC = () => {
+export const PantrySwitcher: React.FC<{ onManageSettings?: () => void }> = ({ onManageSettings }) => {
     const { state, switchPantry } = useSyncStore();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -77,8 +77,11 @@ export const PantrySwitcher: React.FC = () => {
                     </div>
                     <div className="border-t border-slate-50 mt-2 pt-2 px-2">
                         <button
-                            disabled
-                            className="w-full text-left px-4 py-2 text-[10px] font-black text-slate-300 uppercase tracking-widest"
+                            onClick={() => {
+                                onManageSettings?.();
+                                setIsOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-[10px] font-black text-[#4C6B51] hover:bg-[#F8F5EE] rounded-xl transition-all uppercase tracking-widest active:scale-95"
                         >
                             + Manage in Settings
                         </button>
