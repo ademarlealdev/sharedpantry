@@ -3,6 +3,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
+import { SyncStoreProvider } from './store/useSyncStore';
+
 // Polyfill process for browser environment
 // This ensures that access to process.env doesn't crash the app
 if (typeof (window as any).process === 'undefined') {
@@ -19,7 +21,9 @@ const root = ReactDOM.createRoot(rootElement);
 try {
   root.render(
     <React.StrictMode>
-      <App />
+      <SyncStoreProvider>
+        <App />
+      </SyncStoreProvider>
     </React.StrictMode>
   );
 } catch (error) {

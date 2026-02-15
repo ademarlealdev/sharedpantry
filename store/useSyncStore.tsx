@@ -1,8 +1,7 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { GroceryItem, AppState, FamilyGroup, CategoryType } from '../types';
 import { supabase } from '../services/supabase';
-import { User } from '@supabase/supabase-js';
 
 const INITIAL_STATE: AppState = {
   user: null,
@@ -12,7 +11,27 @@ const INITIAL_STATE: AppState = {
   isInitialized: false
 };
 
-export const useSyncStore = () => {
+interface SyncStoreContextType {
+  state: AppState;
+  loading: boolean;
+  dataLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  addItem: (item: GroceryItem) => Promise<void>;
+  toggleItem: (id: string) => Promise<void>;
+  removeItem: (id: string) => Promise<void>;
+  updateItem: (id: string, updates: Partial<GroceryItem>) => Promise<void>;
+  clearBought: () => Promise<void>;
+  createPantry: (name: string) => Promise<void>;
+  joinPantry: (code: string) => Promise<void>;
+  switchPantry: (id: string) => void;
+  leavePantry: (id: string) => Promise<void>;
+  deletePantry: (id: string) => Promise<void>;
+}
+
+const SyncStoreContext = createContext<SyncStoreContextType | undefined>(undefined);
+
+export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
@@ -79,7 +98,6 @@ export const useSyncStore = () => {
 
   // Auth Effect
   useEffect(() => {
-    // Keep track of the last processed user ID to avoid redundant pantry fetches
     let lastProcessedUserId: string | null = null;
 
     const handleSession = async (session: any) => {
@@ -87,7 +105,6 @@ export const useSyncStore = () => {
         if (session?.user) {
           const userId = session.user.id;
 
-          // Update user state immediately if it changed
           setState(prev => {
             if (prev.user?.id === userId) return prev;
             return {
@@ -100,7 +117,6 @@ export const useSyncStore = () => {
             };
           });
 
-          // Only fetch pantries if this is a new session for this user
           if (lastProcessedUserId !== userId) {
             lastProcessedUserId = userId;
             try {
@@ -156,7 +172,6 @@ export const useSyncStore = () => {
       }
     });
 
-    // Initial check
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleSession(session);
     }).catch(() => setLoading(false));
@@ -262,8 +277,6 @@ export const useSyncStore = () => {
 
   const deletePantry = async (id: string) => {
     if (!state.user) return;
-    // Database will cascade delete items and members due to foreign keys (if configured)
-    // For safety with current Supabase setup, we'll delete the pantry row
     const { error } = await supabase.from('pantries').delete().eq('id', id).eq('created_by', state.user.id);
     if (error) throw error;
 
@@ -329,9 +342,23 @@ export const useSyncStore = () => {
     await supabase.from('grocery_items').delete().eq('is_bought', true).eq('pantry_id', state.activePantryId);
   };
 
-  return {
+  const value = {
     state, loading, dataLoading, login, logout,
     addItem, toggleItem, removeItem, updateItem, clearBought,
     createPantry, joinPantry, switchPantry, leavePantry, deletePantry
   };
+
+  return (
+    <SyncStoreContext.Provider value= { value } >
+    { children }
+    </SyncStoreContext.Provider>
+  );
+};
+
+export const useSyncStore = () => {
+  const context = useContext(SyncStoreContext);
+  if (context === undefined) {
+    throw new Error('useSyncStore must be used within a SyncStoreProvider');
+  }
+  return context;
 };
