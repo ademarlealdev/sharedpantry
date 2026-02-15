@@ -372,7 +372,10 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const switchPantry = (id: string) => {
-    setState(prev => ({ ...prev, activePantryId: id, items: [] }));
+    setState(prev => {
+      if (prev.activePantryId === id) return prev;
+      return { ...prev, activePantryId: id, items: [] };
+    });
   };
 
   const addItem = async (item: GroceryItem) => {
