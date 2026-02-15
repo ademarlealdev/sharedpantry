@@ -79,9 +79,17 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         createdBy: m.pantry.created_by,
         userRole: m.role as 'Administrator' | 'Member',
         members: []
-      }));
+      }))
+      .sort((a, b) => {
+        // 1. Administrator first
+        if (a.userRole === 'Administrator' && b.userRole !== 'Administrator') return -1;
+        if (a.userRole !== 'Administrator' && b.userRole === 'Administrator') return 1;
 
-    console.log(`[SyncStore] Mapped pantries:`, mapped);
+        // 2. Then alphabetical by name
+        return a.name.localeCompare(b.name);
+      });
+
+    console.log(`[SyncStore] Mapped & Sorted pantries:`, mapped);
     return mapped;
   }, []);
 
