@@ -79,7 +79,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                                 onClick={() => setIsConfirming(true)}
                                 className="text-[9px] uppercase tracking-[0.15em] px-3 py-2 rounded-xl opacity-40 hover:opacity-100 transition-opacity"
                             >
-                                Delete Account
+                                <span className="hidden sm:inline">Delete Account</span>
+                                <span className="sm:hidden text-base">🗑️</span>
                             </Button>
                         </div>
                     </div>

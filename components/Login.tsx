@@ -120,7 +120,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-8">
-              <PantryLogo className="w-20 h-20" />
+              <PantryLogo className="w-20 h-20 soft-bounce" />
             </div>
             <h1 className="text-4xl font-[900] text-slate-900 tracking-tighter mb-2">
               {isRegistering ? 'Create Account' : 'Welcome to SharedPantry'}
