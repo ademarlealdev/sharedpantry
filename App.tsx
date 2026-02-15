@@ -28,6 +28,8 @@ const App: React.FC = () => {
     setView('list');
   }, [state.user?.id]);
 
+  const activePantry = state.pantries.find(p => p.id === state.activePantryId);
+
   if (loading) {
     return (
       <MobileContainer>
@@ -51,7 +53,7 @@ const App: React.FC = () => {
     <MobileContainer>
       <header className="w-full bg-white/80 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-100/50">
         <div className="max-w-5xl mx-auto px-6 pt-12 pb-6 flex justify-between items-center">
-          <div className="flex items-center space-x-3.5">
+          <div className="flex items-center space-x-3.5 text-left">
             {view === 'profile' ? (
               <Button
                 variant="icon"
@@ -69,10 +71,10 @@ const App: React.FC = () => {
             )}
             <div className="flex flex-col">
               <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none">
-                {view === 'profile' ? 'Settings' : 'SharedPantry'}
+                {view === 'profile' ? 'Settings' : (activePantry?.name || 'SharedPantry')}
               </h1>
               <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">
-                {view === 'profile' ? 'Pantry Management' : 'Local Storage Sync'}
+                {view === 'profile' ? 'Pantry Management' : 'Shared Collaborative List'}
               </p>
             </div>
           </div>
@@ -87,9 +89,9 @@ const App: React.FC = () => {
             {view === 'profile' ? (
               <span className="text-xl">👤</span>
             ) : (
-              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+              <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs">
+                {state.user.name[0]}
+              </div>
             )}
           </button>
         </div>
@@ -115,7 +117,6 @@ const App: React.FC = () => {
         ) : (
           <ProfileView
             user={state.user}
-            group={state.group}
             onLogout={logout}
           />
         )}

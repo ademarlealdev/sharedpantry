@@ -1,14 +1,14 @@
 
-export type CategoryType = 
-  | 'Produce' 
-  | 'Dairy' 
-  | 'Bakery' 
-  | 'Meat & Seafood' 
-  | 'Frozen' 
-  | 'Pantry' 
-  | 'Household' 
-  | 'Beverages' 
-  | 'Snacks' 
+export type CategoryType =
+  | 'Produce'
+  | 'Dairy'
+  | 'Bakery'
+  | 'Meat & Seafood'
+  | 'Frozen'
+  | 'Pantry'
+  | 'Household'
+  | 'Beverages'
+  | 'Snacks'
   | 'Other';
 
 export interface GroceryItem {
@@ -22,6 +22,7 @@ export interface GroceryItem {
   isBought: boolean;
   addedBy: string;
   createdAt: number;
+  pantryId: string; // Map to pantry_id in Supabase
 }
 
 export interface FamilyMember {
@@ -36,11 +37,13 @@ export interface FamilyGroup {
   code: string;
   name: string;
   members: FamilyMember[];
+  createdBy: string;
 }
 
 export interface AppState {
   user: { name: string; id: string; role: 'Administrator' | 'Member' } | null;
-  group: FamilyGroup | null;
+  pantries: FamilyGroup[];
+  activePantryId: string | null;
   items: GroceryItem[];
   isInitialized: boolean;
 }

@@ -1,23 +1,19 @@
 import React from 'react';
 import { AppState } from '../types';
-import { Card } from './ui/Card';
 import { Button } from './ui/Button';
+import { PantryManager } from './PantryManager';
 
 interface ProfileViewProps {
     user: NonNullable<AppState['user']>;
-    group: AppState['group'];
     onLogout: () => void;
-    onInvite?: () => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
     user,
-    group,
-    onLogout,
-    onInvite
+    onLogout
 }) => {
     return (
-        <div className="flex-1 overflow-y-auto bg-slate-50/30 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="flex-1 overflow-y-auto bg-slate-50/30 animate-in slide-in-from-bottom-4 duration-300 pb-20">
             <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
 
                 {/* Profile Card */}
@@ -49,43 +45,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     </div>
                 </section>
 
-                {/* Members List */}
+                {/* Pantry Management */}
                 <section className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shared With</h3>
-                        <span className="text-[9px] bg-slate-100 px-2 py-0.5 rounded-md font-black text-slate-500">
-                            {group?.members.length} MEMBERS
-                        </span>
+                    <div className="px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manage Shared Spaces</h3>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {group?.members.map((member) => (
-                            <Card key={member.id} className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-xl shadow-inner">
-                                    {member.role === 'Administrator' ? '👑' : '👤'}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-black text-slate-800">{member.name}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{member.role}</p>
-                                </div>
-                                {member.role !== 'Administrator' && (
-                                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                                )}
-                            </Card>
-                        ))}
-
-                        <button
-                            onClick={onInvite}
-                            className="bg-emerald-50 border-2 border-emerald-100 border-dashed p-5 rounded-3xl flex items-center justify-center space-x-3 text-emerald-600 hover:bg-emerald-100/50 transition-all group"
-                        >
-                            <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            <span className="text-xs font-black uppercase tracking-widest">Invite Member</span>
-                        </button>
-                    </div>
+                    <PantryManager />
                 </section>
-
             </div>
         </div>
     );

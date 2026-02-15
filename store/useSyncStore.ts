@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { GroceryItem, AppState } from '../types';
+import { GroceryItem, AppState, FamilyGroup, CategoryType } from '../types';
 import { supabase } from '../services/supabase';
 import { User } from '@supabase/supabase-js';
 
@@ -8,12 +8,8 @@ const STORAGE_KEY = 'shared_pantry_data_v1';
 
 const INITIAL_STATE: AppState = {
   user: null,
-  group: {
-    id: 'local-pantry',
-    name: 'SharedPantry',
-    code: 'HOME',
-    members: []
-  },
+  pantries: [],
+  activePantryId: null,
   items: [],
   isInitialized: false
 };
@@ -23,121 +19,125 @@ export const useSyncStore = () => {
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
 
+  // Helper to map DB row to GroceryItem
+  const mapItem = (row: any): GroceryItem => ({
+    id: row.id,
+    name: row.name,
+    category: row.category as CategoryType,
+    icon: row.icon,
+    qtyValue: row.qty_value,
+    qtyUnit: row.qty_unit,
+    isBought: row.is_bought,
+    notes: row.notes,
+    addedBy: row.user_id,
+    createdAt: new Date(row.created_at).getTime(),
+    pantryId: row.pantry_id
+  });
+
   const handleAuthChange = (supabaseUser: User | null) => {
     setState(prev => {
       if (!supabaseUser) {
-        return { ...prev, user: null };
+        return { ...prev, user: null, activePantryId: null, pantries: [] };
       }
 
       const newUser = {
         id: supabaseUser.id,
         name: supabaseUser.user_metadata.full_name || supabaseUser.email?.split('@')[0] || 'User',
-        role: 'Administrator' // Defaulting to admin
-      } as const;
+        role: 'Administrator' as const
+      };
 
       return {
         ...prev,
-        user: newUser,
-        group: prev.group ? { ...prev.group, members: [newUser as any] } : null
+        user: newUser
       };
     });
   };
 
-  // Load local state on mount (only if not authenticated initially later)
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Only load local items if we determine we aren't logged in yet, or as initial state
-        // But auth check happens async. So we load local first.
-        setState(prev => ({ ...prev, ...parsed, isInitialized: true }));
-      } else {
-        setState(prev => ({ ...prev, isInitialized: true }));
-      }
-    } catch (e) {
-      console.error("Local storage read failed", e);
+  const fetchPantries = async (userId: string) => {
+    const { data: members, error: memError } = await supabase
+      .from('pantry_members')
+      .select(`
+        role,
+        pantry:pantries (*)
+      `)
+      .eq('user_id', userId);
+
+    if (memError) {
+      console.error("[SyncStore] Error fetching pantries:", memError);
+      return [];
     }
-  }, []);
 
-  // Set up Supabase auth listener and Data Subscription
+    const mappedPantries: FamilyGroup[] = (members || []).map((m: any) => ({
+      id: m.pantry.id,
+      name: m.pantry.name,
+      code: m.pantry.invite_code,
+      createdBy: m.pantry.created_by,
+      members: []
+    }));
+
+    return mappedPantries;
+  };
+
+  const ensureDefaultPantry = async (userId: string, existingPantries: FamilyGroup[]) => {
+    if (existingPantries.length > 0) return existingPantries[0].id;
+
+    console.log("[SyncStore] Creating default pantry...");
+    const { data: pantry, error: pError } = await supabase
+      .from('pantries')
+      .insert({ name: 'My Pantry', created_by: userId })
+      .select()
+      .single();
+
+    if (pError) throw pError;
+
+    const { error: mError } = await supabase
+      .from('pantry_members')
+      .insert({ pantry_id: pantry.id, user_id: userId, role: 'Administrator' });
+
+    if (mError) throw mError;
+
+    return pantry.id;
+  };
+
   useEffect(() => {
-    let subscription: any = null;
+    let itemSubscription: any = null;
 
-    const setupDataSubscription = async (userId: string) => {
+    const setupSubscriptions = async (userId: string, pantryId: string) => {
       setDataLoading(true);
 
-      // 1. Fetch initial data
-      const { data, error } = await supabase
+      const { data: items, error: iError } = await supabase
         .from('grocery_items')
         .select('*')
+        .eq('pantry_id', pantryId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching items:', error);
-      } else if (data) {
-        const mappedItems: GroceryItem[] = data.map(row => ({
-          id: row.id,
-          name: row.name,
-          category: row.category,
-          icon: row.icon,
-          qtyValue: row.qty_value,
-          qtyUnit: row.qty_unit,
-          isBought: row.is_bought,
-          notes: row.notes,
-          addedBy: row.user_id,
-          createdAt: new Date(row.created_at).getTime()
-        }));
+      if (iError) console.error("[SyncStore] Error fetching items:", iError);
+      else setState(prev => ({ ...prev, items: (items || []).map(mapItem) }));
 
-        setState(prev => ({ ...prev, items: mappedItems }));
-      }
       setDataLoading(false);
 
-      // 2. Subscribe to changes
-      console.log("[SyncStore] Subscribing to realtime for user:", userId);
-      subscription = supabase
-        .channel('grocery_items_channel')
+      if (itemSubscription) itemSubscription.unsubscribe();
+
+      itemSubscription = supabase
+        .channel(`items:${pantryId}`)
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'grocery_items', filter: `user_id=eq.${userId}` },
+          { event: '*', schema: 'public', table: 'grocery_items', filter: `pantry_id=eq.${pantryId}` },
           (payload) => {
-            console.log("[SyncStore] Realtime event:", payload.eventType, payload);
+            console.log("[SyncStore] Realtime Event:", payload.eventType, payload);
             if (payload.eventType === 'INSERT') {
               const row = payload.new;
-              const newItem: GroceryItem = {
-                id: row.id,
-                name: row.name,
-                category: row.category,
-                icon: row.icon,
-                qtyValue: row.qty_value,
-                qtyUnit: row.qty_unit,
-                isBought: row.is_bought,
-                notes: row.notes,
-                addedBy: row.user_id,
-                createdAt: new Date(row.created_at).getTime()
-              };
+              const newItem = mapItem(row);
               setState(prev => {
-                // Prevent duplicates if optimistic update already added it
                 if (prev.items.some(i => i.id === newItem.id)) return prev;
-                return {
-                  ...prev,
-                  items: [newItem, ...prev.items.filter(i => i.id !== newItem.id)]
-                };
+                return { ...prev, items: [newItem, ...prev.items] };
               });
             } else if (payload.eventType === 'UPDATE') {
               const row = payload.new;
+              const updatedItem = mapItem(row);
               setState(prev => ({
                 ...prev,
-                items: prev.items.map(i => i.id === row.id ? {
-                  ...i,
-                  name: row.name,
-                  category: row.category,
-                  icon: row.icon,
-                  qtyValue: row.qty_value,
-                  qtyUnit: row.qty_unit,
-                  isBought: row.is_bought,
-                  notes: row.notes,
-                } : i)
+                items: prev.items.map(i => i.id === updatedItem.id ? updatedItem : i)
               }));
             } else if (payload.eventType === 'DELETE') {
               const row = payload.old;
@@ -148,48 +148,54 @@ export const useSyncStore = () => {
             }
           }
         )
-        .subscribe((status) => {
-          console.log("[SyncStore] Subscription status:", status);
-        });
+        .subscribe();
     };
 
-    // Check current session
+    const initializeUser = async (userId: string) => {
+      try {
+        const pantries = await fetchPantries(userId);
+        const activeId = await ensureDefaultPantry(userId, pantries);
+        const refetchedPantries = pantries.length > 0 ? pantries : await fetchPantries(userId);
+
+        setState(prev => ({
+          ...prev,
+          pantries: refetchedPantries,
+          activePantryId: activeId,
+          isInitialized: true
+        }));
+
+        await setupSubscriptions(userId, activeId);
+      } catch (err) {
+        console.error("[SyncStore] Initialization failed:", err);
+        setState(prev => ({ ...prev, isInitialized: true }));
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         handleAuthChange(session.user);
-        setupDataSubscription(session.user.id);
+        initializeUser(session.user.id);
+      } else {
+        setState(prev => ({ ...prev, isInitialized: true }));
       }
       setLoading(false);
     });
 
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((_event, session) => {
       handleAuthChange(session?.user ?? null);
-
       if (session?.user) {
-        setupDataSubscription(session.user.id);
+        initializeUser(session.user.id);
       } else {
-        // User logged out
-        if (subscription) subscription.unsubscribe();
-        // Optionally clear items or revert to local storage?
-        // For now, let's clear items to avoid showing previous user's data
-        setState(prev => ({ ...prev, items: [] }));
+        if (itemSubscription) itemSubscription.unsubscribe();
+        setState({ ...INITIAL_STATE, isInitialized: true });
       }
     });
 
     return () => {
       authListener.unsubscribe();
-      if (subscription) subscription.unsubscribe();
+      if (itemSubscription) itemSubscription.unsubscribe();
     };
   }, []);
-
-
-
-  // Sync state to local storage (Only if user is NULL, i.e., Guest Mode)
-  useEffect(() => {
-    if (state.isInitialized && !state.user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-  }, [state]);
 
   const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -201,47 +207,86 @@ export const useSyncStore = () => {
     if (error) console.error("Logout error", error);
   };
 
+  const createPantry = async (name: string) => {
+    if (!state.user) return;
+    const { data: pantry, error: pError } = await supabase
+      .from('pantries')
+      .insert({ name, created_by: state.user.id })
+      .select()
+      .single();
+
+    if (pError) throw pError;
+
+    await supabase.from('pantry_members').insert({
+      pantry_id: pantry.id,
+      user_id: state.user.id,
+      role: 'Administrator'
+    });
+
+    const newPantries = await fetchPantries(state.user.id);
+    setState(prev => ({ ...prev, pantries: newPantries, activePantryId: pantry.id }));
+  };
+
+  const joinPantry = async (inviteCode: string) => {
+    if (!state.user) return;
+
+    const { data: pantry, error: pError } = await supabase
+      .from('pantries')
+      .select('id')
+      .eq('invite_code', inviteCode.trim())
+      .single();
+
+    if (pError) throw new Error("Invalid invite code");
+
+    const { error: mError } = await supabase
+      .from('pantry_members')
+      .insert({ pantry_id: pantry.id, user_id: state.user.id, role: 'Member' });
+
+    if (mError) throw mError;
+
+    const newPantries = await fetchPantries(state.user.id);
+    setState(prev => ({ ...prev, pantries: newPantries, activePantryId: pantry.id }));
+  };
+
+  const switchPantry = async (pantryId: string) => {
+    if (!state.user) return;
+    setState(prev => ({ ...prev, activePantryId: pantryId, items: [] }));
+    // Initialization logic in useEffect will handle re-subscription based on activePantryId? 
+    // No, currently initialization runs only on auth change. Let's fix that.
+  };
+
   const addItem = async (item: GroceryItem) => {
-    // Optimistic Update
+    if (!state.user || !state.activePantryId) return;
+
     const optimisticId = 'temp-' + Date.now();
-    const optimisticItem = { ...item, id: optimisticId };
+    const optimisticItem = { ...item, id: optimisticId, pantryId: state.activePantryId };
 
-    if (state.user) {
-      setState(prev => ({ ...prev, items: [optimisticItem, ...prev.items] }));
+    setState(prev => ({ ...prev, items: [optimisticItem, ...prev.items] }));
 
-      const { data, error } = await supabase.from('grocery_items').insert({
-        name: item.name,
-        category: item.category,
-        icon: item.icon,
-        qty_value: item.qtyValue,
-        qty_unit: item.qtyUnit,
-        is_bought: item.isBought,
-        notes: item.notes,
-        user_id: state.user.id
-      }).select().single();
+    const { data, error } = await supabase.from('grocery_items').insert({
+      name: item.name,
+      category: item.category,
+      icon: item.icon,
+      qty_value: item.qtyValue,
+      qty_unit: item.qtyUnit,
+      is_bought: item.isBought,
+      notes: item.notes,
+      user_id: state.user.id,
+      pantry_id: state.activePantryId
+    }).select().single();
 
-      if (error) {
-        console.error("Add item failed", error);
-        setState(prev => ({ ...prev, items: prev.items.filter(i => i.id !== optimisticId) }));
-      } else if (data) {
-        // Replace temp ID with real ID
-        setState(prev => ({
-          ...prev,
-          items: prev.items.map(i => i.id === optimisticId ? {
-            ...i,
-            id: data.id,
-            addedBy: data.user_id,
-            createdAt: new Date(data.created_at).getTime()
-          } : i)
-        }));
-      }
-    } else {
-      setState(prev => ({ ...prev, items: [item, ...prev.items] }));
+    if (error) {
+      console.error("Add item failed", error);
+      setState(prev => ({ ...prev, items: prev.items.filter(i => i.id !== optimisticId) }));
+    } else if (data) {
+      setState(prev => ({
+        ...prev,
+        items: prev.items.map(i => i.id === optimisticId ? mapItem(data) : i)
+      }));
     }
   };
 
   const toggleItem = async (id: string) => {
-    // Optimistic Update
     const originalItem = state.items.find(i => i.id === id);
     if (!originalItem) return;
 
@@ -253,18 +298,12 @@ export const useSyncStore = () => {
     if (state.user) {
       const { error } = await supabase.from('grocery_items').update({ is_bought: !originalItem.isBought }).eq('id', id);
       if (error) {
-        console.error("Toggle item failed", error);
-        // Rollback
-        setState(prev => ({
-          ...prev,
-          items: prev.items.map(i => i.id === id ? originalItem : i)
-        }));
+        setState(prev => ({ ...prev, items: prev.items.map(i => i.id === id ? originalItem : i) }));
       }
     }
   };
 
   const updateItem = async (id: string, updates: Partial<GroceryItem>) => {
-    // Optimistic Update
     const originalItem = state.items.find(i => i.id === id);
     setState(prev => ({
       ...prev,
@@ -282,48 +321,32 @@ export const useSyncStore = () => {
       if (updates.isBought !== undefined) dbUpdates.is_bought = updates.isBought;
 
       const { error } = await supabase.from('grocery_items').update(dbUpdates).eq('id', id);
-      if (error) {
-        console.error("Update item failed", error);
-        // Rollback
-        if (originalItem) {
-          setState(prev => ({
-            ...prev,
-            items: prev.items.map(i => i.id === id ? originalItem : i)
-          }));
-        }
+      if (error && originalItem) {
+        setState(prev => ({ ...prev, items: prev.items.map(i => i.id === id ? originalItem : i) }));
       }
     }
   };
 
   const removeItem = async (id: string) => {
-    // Optimistic Update
     const originalItem = state.items.find(i => i.id === id);
-    setState(prev => ({
-      ...prev,
-      items: prev.items.filter(i => i.id !== id)
-    }));
+    setState(prev => ({ ...prev, items: prev.items.filter(i => i.id !== id) }));
 
     if (state.user) {
       const { error } = await supabase.from('grocery_items').delete().eq('id', id);
-      if (error) {
-        console.error("Delete item failed", error);
-        // Rollback
-        if (originalItem) {
-          setState(prev => ({ ...prev, items: [originalItem, ...prev.items] }));
-        }
+      if (error && originalItem) {
+        setState(prev => ({ ...prev, items: [originalItem, ...prev.items] }));
       }
     }
   };
 
   const clearBought = async () => {
-    if (state.user) {
-      const { error } = await supabase.from('grocery_items').delete().eq('is_bought', true).eq('user_id', state.user.id);
+    if (state.user && state.activePantryId) {
+      const { error } = await supabase
+        .from('grocery_items')
+        .delete()
+        .eq('is_bought', true)
+        .eq('pantry_id', state.activePantryId);
       if (error) console.error("Clear bought failed", error);
-    } else {
-      setState(prev => ({
-        ...prev,
-        items: prev.items.filter(i => !i.isBought)
-      }));
     }
   };
 
@@ -337,6 +360,9 @@ export const useSyncStore = () => {
     removeItem,
     updateItem,
     clearBought,
+    createPantry,
+    joinPantry,
+    switchPantry,
     connectionStatus: 'connected' as const,
     lastError: null
   };
