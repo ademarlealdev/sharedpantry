@@ -63,7 +63,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <h1 className="text-4xl font-[900] text-slate-900 tracking-tighter mb-2">
               {isRegistering ? 'Create Account' : 'Welcome to SharedPantry'}
             </h1>
-            <p className="text-[#8B5E3C] font-black text-[10px] uppercase tracking-[0.2em] opacity-70">
+            <p className="text-[#4C6B51] font-black text-[10px] uppercase tracking-[0.2em]">
               {isRegistering ? 'Join your family pantry' : 'Manage your pantries together'}
             </p>
           </div>
