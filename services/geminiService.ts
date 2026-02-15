@@ -13,7 +13,7 @@ export const categorizeItem = async (itemName: string): Promise<{ category: stri
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Use standard flash model name
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Reverting to 1.0 pro for stability
 
     const prompt = `Categorize the grocery item "${itemName}" (language: auto-detect) into one of these: Produce, Dairy, Bakery, Meat & Seafood, Frozen, Pantry, Household, Beverages, Snacks, Other. 
       

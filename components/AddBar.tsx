@@ -55,36 +55,35 @@ export const AddBar: React.FC<AddBarProps> = ({ onAdd, onUpdate, userName, items
     }
 
     setIsSubmitting(true);
-    const qtyValue = qty.trim() || '1';
-    const qtyUnit = unit || undefined;
-    const itemNotes = notes.trim() || undefined;
-    const tempId = Math.random().toString(36).substr(2, 9);
 
-    const optimisticItem: GroceryItem & { isOptimistic?: boolean } = {
-      id: tempId,
+    // Categorize first to avoid ID mismatch issues with Supabase
+    // This adds a small delay but ensures data consistency
+    let category = 'Other';
+    let icon = '🛒';
+
+    try {
+      const result = await categorizeItem(itemText);
+      category = result.category;
+      icon = result.icon;
+    } catch (error) {
+      console.error("Categorization failed, using default", error);
+    }
+
+    const newItem: GroceryItem = {
+      id: '', // Store ensures ID generation
       name: itemText,
-      qtyValue,
-      qtyUnit,
-      notes: itemNotes,
-      category: 'Other',
-      icon: '⏳',
+      qtyValue: qty.trim() || '1',
+      qtyUnit: unit || undefined,
+      notes: notes.trim() || undefined,
+      category: category as CategoryType,
+      icon,
       isBought: false,
       addedBy: userName,
       createdAt: Date.now(),
     };
 
-    onAdd(optimisticItem);
+    await onAdd(newItem);
     resetForm();
-
-    try {
-      const { category, icon } = await categorizeItem(itemText);
-      onUpdate(tempId, {
-        category: category as CategoryType,
-        icon: icon
-      });
-    } catch (error) {
-      onUpdate(tempId, { icon: '🛒' });
-    }
   };
 
   const unitOptions = [
