@@ -103,7 +103,7 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white overflow-hidden relative">
       <nav className="w-full border-b border-slate-50 flex-none bg-white z-20">
-        <div className="max-w-5xl mx-auto overflow-x-auto w-full touch-pan-x pb-2">
+        <div className="max-w-5xl mx-auto overflow-x-auto w-full touch-pan-x pb-2 hide-scrollbar">
           <div className="inline-flex px-6 py-4 gap-2 min-w-full">
             <CategoryPill
               id="cat-All"
