@@ -278,33 +278,64 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const deletePantry = async (id: string) => {
     if (!state.user) return;
 
-    // Step 1: Delete items
-    const { error: itemError } = await supabase.from('grocery_items').delete().eq('pantry_id', id);
-    if (itemError) {
-      console.warn("[SyncStore] Error clearing items before pantry delete:", itemError);
-    }
+    console.log(`[SyncStore] Attempting to delete pantry: ${id}`);
 
-    // Step 2: Delete members
-    const { error: memError } = await supabase.from('pantry_members').delete().eq('pantry_id', id);
-    if (memError) {
-      console.warn("[SyncStore] Error clearing members before pantry delete:", memError);
-    }
+    try {
+      // Step 1: Delete all items in this pantry
+      const { error: itemError } = await supabase
+        .from('grocery_items')
+        .delete()
+        .eq('pantry_id', id);
 
-    // Step 3: Delete the pantry itself
-    const { error: pError } = await supabase.from('pantries').delete().eq('id', id).eq('created_by', state.user.id);
-    if (pError) {
-      console.error("[SyncStore] Failed to delete pantry record:", pError);
-      throw new Error(`Could not delete pantry: ${pError.message}`);
-    }
+      if (itemError) {
+        console.warn("[SyncStore] Warning: Could not clear items. Continuing...", itemError);
+      }
 
-    const userPantries = await fetchPantries(state.user.id);
-    const fallbackId = userPantries.length > 0 ? userPantries[0].id : null;
-    setState(prev => ({
-      ...prev,
-      pantries: userPantries,
-      activePantryId: fallbackId,
-      items: []
-    }));
+      // Step 2: Delete all members of this pantry
+      const { error: memError } = await supabase
+        .from('pantry_members')
+        .delete()
+        .eq('pantry_id', id);
+
+      if (memError) {
+        console.warn("[SyncStore] Warning: Could not clear members. Continuing...", memError);
+      }
+
+      // Step 3: Delete the pantry itself
+      // We must be the owner to delete it
+      const { error: pError } = await supabase
+        .from('pantries')
+        .delete()
+        .eq('id', id)
+        .eq('created_by', state.user.id);
+
+      if (pError) {
+        console.error("[SyncStore] Critical error deleting pantry record:", pError);
+        throw new Error(`Failed to delete pantry: ${pError.message}`);
+      }
+
+      console.log("[SyncStore] Pantry deleted successfully.");
+
+      // Step 4: Refresh local state
+      const userPantries = await fetchPantries(state.user.id);
+
+      // If we deleted the active pantry, switch to another one or null
+      let newActiveId = state.activePantryId;
+      if (state.activePantryId === id) {
+        newActiveId = userPantries.length > 0 ? userPantries[0].id : null;
+      }
+
+      setState(prev => ({
+        ...prev,
+        pantries: userPantries,
+        activePantryId: newActiveId,
+        items: state.activePantryId === id ? [] : state.items
+      }));
+
+    } catch (err) {
+      console.error("[SyncStore] Deletion flow failed:", err);
+      throw err;
+    }
   };
 
   const switchPantry = (id: string) => {

@@ -4,6 +4,7 @@ import { useSyncStore } from '../store/useSyncStore';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { Modal } from './ui/Modal';
 
 export const PantryManager: React.FC = () => {
     const { state, createPantry, joinPantry, switchPantry, deletePantry, leavePantry } = useSyncStore();
@@ -13,28 +14,37 @@ export const PantryManager: React.FC = () => {
     const [isJoining, setIsJoining] = useState(false);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
+    // Custom Modal States
+    const [pendingDelete, setPendingDelete] = useState<{ id: string, name: string } | null>(null);
+    const [pendingLeave, setPendingLeave] = useState<{ id: string, name: string } | null>(null);
+
     const activePantry = state.pantries.find(p => p.id === state.activePantryId);
 
-    const handleDelete = async (id: string, name: string) => {
-        if (!window.confirm(`Delete "${name}"?`)) return;
+    const onConfirmDelete = async () => {
+        if (!pendingDelete) return;
+        const { id } = pendingDelete;
         setIsDeleting(id);
+        setPendingDelete(null);
         try {
             await deletePantry(id);
         } catch (err) {
             console.error(err);
-            alert(err instanceof Error ? err.message : "Failed to delete pantry. You may need to remove items first.");
+            alert(err instanceof Error ? err.message : "Failed to delete pantry.");
         } finally {
             setIsDeleting(null);
         }
     };
 
-    const handleLeave = async (id: string, name: string) => {
-        if (!window.confirm(`Leave "${name}"? You will lose access to this grocery list.`)) return;
+    const onConfirmLeave = async () => {
+        if (!pendingLeave) return;
+        const { id } = pendingLeave;
         setIsDeleting(id);
+        setPendingLeave(null);
         try {
             await leavePantry(id);
         } catch (err) {
             console.error(err);
+            alert(err instanceof Error ? err.message : "Failed to leave pantry.");
         } finally {
             setIsDeleting(null);
         }
@@ -77,6 +87,80 @@ export const PantryManager: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Custom Delete Modal */}
+            <Modal
+                isOpen={!!pendingDelete}
+                onClose={() => setPendingDelete(null)}
+                title="Delete Space?"
+                actions={
+                    <>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => setPendingDelete(null)}
+                            className="rounded-2xl py-4"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={onConfirmDelete}
+                            className="bg-red-500 hover:bg-red-600 border-none rounded-2xl py-4"
+                        >
+                            Delete
+                        </Button>
+                    </>
+                }
+            >
+                <div className="space-y-4 py-2">
+                    <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-2">
+                        🗑️
+                    </div>
+                    <p className="text-center text-slate-500 text-sm font-medium leading-relaxed">
+                        Are you sure you want to delete <span className="text-slate-900 font-black">"{pendingDelete?.name}"</span>?
+                        This action cannot be undone and will remove all items.
+                    </p>
+                </div>
+            </Modal>
+
+            {/* Custom Leave Modal */}
+            <Modal
+                isOpen={!!pendingLeave}
+                onClose={() => setPendingLeave(null)}
+                title="Leave Space?"
+                actions={
+                    <>
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => setPendingLeave(null)}
+                            className="rounded-2xl py-4"
+                        >
+                            Stay
+                        </Button>
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={onConfirmLeave}
+                            className="bg-slate-900 hover:bg-slate-800 border-none rounded-2xl py-4"
+                        >
+                            Leave
+                        </Button>
+                    </>
+                }
+            >
+                <div className="space-y-4 py-2">
+                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-2">
+                        🚪
+                    </div>
+                    <p className="text-center text-slate-500 text-sm font-medium leading-relaxed">
+                        You will lose access to <span className="text-slate-900 font-black">"{pendingLeave?.name}"</span>.
+                        You'll need a new invite code to come back.
+                    </p>
+                </div>
+            </Modal>
+
             {/* Active Pantry & Switcher */}
             <section className="space-y-4">
                 <div className="flex items-center justify-between px-1">
@@ -90,16 +174,14 @@ export const PantryManager: React.FC = () => {
                     {state.pantries.map((pantry) => (
                         <div
                             key={pantry.id}
-                            className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col space-y-4 group ${state.activePantryId === pantry.id
+                            className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col space-y-4 group cursor-pointer ${state.activePantryId === pantry.id
                                 ? 'bg-white border-emerald-500 shadow-lg shadow-emerald-500/10'
                                 : 'bg-slate-50 border-transparent hover:border-slate-200'
                                 }`}
+                            onClick={() => switchPantry(pantry.id)}
                         >
                             <div className="flex items-center justify-between">
-                                <button
-                                    onClick={() => switchPantry(pantry.id)}
-                                    className="flex items-center space-x-4 flex-1 text-left"
-                                >
+                                <div className="flex items-center space-x-4 flex-1 text-left">
                                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${state.activePantryId === pantry.id ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400'
                                         } shadow-sm`}>
                                         🏠
@@ -112,7 +194,7 @@ export const PantryManager: React.FC = () => {
                                             {pantry.createdBy === state.user?.id ? 'Owner' : 'Member'}
                                         </p>
                                     </div>
-                                </button>
+                                </div>
                                 {state.activePantryId === pantry.id && (
                                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm animate-pulse"></div>
                                 )}
@@ -121,7 +203,10 @@ export const PantryManager: React.FC = () => {
                             <div className="flex items-center space-x-2 pt-2 border-t border-slate-100/50">
                                 {pantry.createdBy === state.user?.id ? (
                                     <button
-                                        onClick={() => handleDelete(pantry.id, pantry.name)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setPendingDelete({ id: pantry.id, name: pantry.name });
+                                        }}
                                         disabled={isDeleting === pantry.id}
                                         className="flex-1 flex items-center justify-center space-x-2 py-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all active:scale-95 group/del"
                                         aria-label="Delete Pantry"
@@ -133,7 +218,10 @@ export const PantryManager: React.FC = () => {
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={() => handleLeave(pantry.id, pantry.name)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setPendingLeave({ id: pantry.id, name: pantry.name });
+                                        }}
                                         disabled={isDeleting === pantry.id}
                                         className="flex-1 flex items-center justify-center space-x-2 py-3 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all active:scale-95 group/leave"
                                         aria-label="Leave Pantry"
