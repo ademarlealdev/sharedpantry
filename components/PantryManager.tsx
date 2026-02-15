@@ -6,14 +6,38 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 
 export const PantryManager: React.FC = () => {
-    const { state, createPantry, joinPantry, switchPantry } = useSyncStore();
+    const { state, createPantry, joinPantry, switchPantry, deletePantry, leavePantry } = useSyncStore();
     const [pantryName, setPantryName] = useState('');
     const [inviteCode, setInviteCode] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [isJoining, setIsJoining] = useState(false);
-    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
     const activePantry = state.pantries.find(p => p.id === state.activePantryId);
+
+    const handleDelete = async (id: string, name: string) => {
+        if (!window.confirm(`Are you sure you want to permanently DELETE "${name}"? All items and members will be removed.`)) return;
+        setIsDeleting(id);
+        try {
+            await deletePantry(id);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsDeleting(null);
+        }
+    };
+
+    const handleLeave = async (id: string, name: string) => {
+        if (!window.confirm(`Leave "${name}"? You will lose access to this grocery list.`)) return;
+        setIsDeleting(id);
+        try {
+            await leavePantry(id);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsDeleting(null);
+        }
+    };
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -63,32 +87,73 @@ export const PantryManager: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {state.pantries.map((pantry) => (
-                        <button
+                        <div
                             key={pantry.id}
-                            onClick={() => switchPantry(pantry.id)}
-                            className={`p-6 rounded-[2rem] border-2 transition-all text-left flex items-center justify-between group ${state.activePantryId === pantry.id
-                                    ? 'bg-white border-emerald-500 shadow-lg shadow-emerald-500/10'
-                                    : 'bg-slate-50 border-transparent hover:border-slate-200'
+                            className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col space-y-4 group ${state.activePantryId === pantry.id
+                                ? 'bg-white border-emerald-500 shadow-lg shadow-emerald-500/10'
+                                : 'bg-slate-50 border-transparent hover:border-slate-200'
                                 }`}
                         >
-                            <div className="flex items-center space-x-4">
-                                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${state.activePantryId === pantry.id ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400'
-                                    } shadow-sm`}>
-                                    🏠
-                                </div>
-                                <div>
-                                    <p className={`font-black tracking-tight ${state.activePantryId === pantry.id ? 'text-slate-800' : 'text-slate-500'}`}>
-                                        {pantry.name}
-                                    </p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                                        {pantry.createdBy === state.user?.id ? 'Owner' : 'Member'}
-                                    </p>
-                                </div>
+                            <div className="flex items-center justify-between">
+                                <button
+                                    onClick={() => switchPantry(pantry.id)}
+                                    className="flex items-center space-x-4 flex-1 text-left"
+                                >
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${state.activePantryId === pantry.id ? 'bg-emerald-500 text-white' : 'bg-white text-slate-400'
+                                        } shadow-sm`}>
+                                        🏠
+                                    </div>
+                                    <div className="min-w-0 pr-4">
+                                        <p className={`font-black tracking-tight truncate ${state.activePantryId === pantry.id ? 'text-slate-800' : 'text-slate-500'}`}>
+                                            {pantry.name}
+                                        </p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                                            {pantry.createdBy === state.user?.id ? 'Owner' : 'Member'}
+                                        </p>
+                                    </div>
+                                </button>
+                                {state.activePantryId === pantry.id && (
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm animate-pulse"></div>
+                                )}
                             </div>
-                            {state.activePantryId === pantry.id && (
-                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            )}
-                        </button>
+
+                            <div className="flex items-center space-x-2 pt-2 border-t border-slate-100/50">
+                                <button
+                                    onClick={() => switchPantry(pantry.id)}
+                                    disabled={state.activePantryId === pantry.id}
+                                    className={`flex-1 text-[10px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-all ${state.activePantryId === pantry.id
+                                            ? 'bg-slate-50 text-slate-300'
+                                            : 'bg-white text-emerald-600 hover:bg-emerald-50 shadow-sm'
+                                        }`}
+                                >
+                                    {state.activePantryId === pantry.id ? 'Active' : 'Select'}
+                                </button>
+
+                                {pantry.createdBy === state.user?.id ? (
+                                    <button
+                                        onClick={() => handleDelete(pantry.id, pantry.name)}
+                                        disabled={isDeleting === pantry.id}
+                                        className="px-4 py-2.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-colors active:scale-95"
+                                        aria-label="Delete Pantry"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleLeave(pantry.id, pantry.name)}
+                                        disabled={isDeleting === pantry.id}
+                                        className="px-4 py-2.5 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-colors active:scale-95"
+                                        aria-label="Leave Pantry"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     ))}
                 </div>
             </section>

@@ -176,6 +176,7 @@ export const useSyncStore = () => {
     if (!state.user || !state.activePantryId) return;
 
     let itemSubscription: any = null;
+    let isActive = true;
 
     const setupItems = async () => {
       setDataLoading(true);
@@ -184,6 +185,8 @@ export const useSyncStore = () => {
         .select('*')
         .eq('pantry_id', state.activePantryId)
         .order('created_at', { ascending: false });
+
+      if (!isActive) return;
 
       if (iError) console.error("[SyncStore] Fetch items failed:", iError);
       else setState(prev => ({ ...prev, items: (items || []).map(mapItem) }));
@@ -197,6 +200,7 @@ export const useSyncStore = () => {
           'postgres_changes',
           { event: '*', schema: 'public', table: 'grocery_items', filter: `pantry_id=eq.${state.activePantryId}` },
           (payload) => {
+            if (!isActive) return;
             if (payload.eventType === 'INSERT') {
               const newItem = mapItem(payload.new);
               setState(prev => prev.items.some(i => i.id === newItem.id) ? prev : { ...prev, items: [newItem, ...prev.items] });
@@ -214,6 +218,7 @@ export const useSyncStore = () => {
     setupItems();
 
     return () => {
+      isActive = false;
       if (itemSubscription) itemSubscription.unsubscribe();
     };
   }, [state.user?.id, state.activePantryId]);
@@ -243,6 +248,28 @@ export const useSyncStore = () => {
     await supabase.from('pantry_members').insert({ pantry_id: pantry.id, user_id: state.user.id, role: 'Member' });
     const userPantries = await fetchPantries(state.user.id);
     setState(prev => ({ ...prev, pantries: userPantries, activePantryId: pantry.id }));
+  };
+
+  const leavePantry = async (id: string) => {
+    if (!state.user) return;
+    const { error } = await supabase.from('pantry_members').delete().eq('pantry_id', id).eq('user_id', state.user.id);
+    if (error) throw error;
+
+    const userPantries = await fetchPantries(state.user.id);
+    const fallbackId = userPantries.length > 0 ? userPantries[0].id : null;
+    setState(prev => ({ ...prev, pantries: userPantries, activePantryId: fallbackId, items: [] }));
+  };
+
+  const deletePantry = async (id: string) => {
+    if (!state.user) return;
+    // Database will cascade delete items and members due to foreign keys (if configured)
+    // For safety with current Supabase setup, we'll delete the pantry row
+    const { error } = await supabase.from('pantries').delete().eq('id', id).eq('created_by', state.user.id);
+    if (error) throw error;
+
+    const userPantries = await fetchPantries(state.user.id);
+    const fallbackId = userPantries.length > 0 ? userPantries[0].id : null;
+    setState(prev => ({ ...prev, pantries: userPantries, activePantryId: fallbackId, items: [] }));
   };
 
   const switchPantry = (id: string) => {
@@ -305,6 +332,6 @@ export const useSyncStore = () => {
   return {
     state, loading, dataLoading, login, logout,
     addItem, toggleItem, removeItem, updateItem, clearBought,
-    createPantry, joinPantry, switchPantry
+    createPantry, joinPantry, switchPantry, leavePantry, deletePantry
   };
 };
