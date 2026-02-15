@@ -329,7 +329,7 @@ export const PantryManager: React.FC = () => {
                             {activePantry.code}
                         </div>
                     </div>
-                    <div className="flex justify-center">
+                    <div className="flex justify-start">
                         <div className="relative w-72 max-w-full">
                             <Button
                                 variant="primary"
