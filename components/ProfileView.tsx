@@ -56,30 +56,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                         </Button>
                     </div>
                     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                        <div className="flex items-center space-x-6 mb-8">
-                            <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl shadow-inner border-2 ${isOwner ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-                                {isOwner ? '👑' : '🧑‍🍳'}
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-800 tracking-tight">{user.name}</h2>
-                                <div className="flex items-center space-x-2 mt-1">
-                                    <span className={`px-2.5 py-1 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm ${isOwner ? 'bg-emerald-500' : 'bg-slate-400'}`}>
-                                        {displayedRole}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 font-bold italic">
-                                        {isOwner ? 'Primary Owner' : 'Pantry Member'}
-                                    </span>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-6">
+                                <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl shadow-inner border-2 ${isOwner ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                                    {isOwner ? '👑' : '🧑‍🍳'}
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{user.name}</h2>
+                                    <div className="flex items-center space-x-2 mt-1">
+                                        <span className={`px-2.5 py-1 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm ${isOwner ? 'bg-emerald-500' : 'bg-slate-400'}`}>
+                                            {displayedRole}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-bold italic">
+                                            {isOwner ? 'Primary Owner' : 'Pantry Member'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="pt-6 border-t border-slate-50">
                             <Button
                                 variant="danger"
                                 size="sm"
                                 onClick={() => setIsConfirming(true)}
-                                className="w-full text-[10px] uppercase tracking-[0.2em] py-4 rounded-2xl opacity-50 hover:opacity-100 transition-opacity"
+                                className="text-[9px] uppercase tracking-[0.15em] px-3 py-2 rounded-xl opacity-40 hover:opacity-100 transition-opacity"
                             >
-                                Delete Account Permanently
+                                Delete Account
                             </Button>
                         </div>
                     </div>
