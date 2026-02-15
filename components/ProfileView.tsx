@@ -40,7 +40,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
     return (
         <div className="flex-1 overflow-y-auto bg-slate-50/30 animate-in slide-in-from-bottom-4 duration-300 pb-20">
-            <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-10">
 
                 {/* Profile Card */}
                 <section className="space-y-4">
@@ -55,15 +55,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                             Logout
                         </Button>
                     </div>
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-6">
-                                <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl shadow-inner border-2 ${isOwner ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="bg-white p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="flex items-center space-x-4 sm:space-x-6">
+                                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-3xl sm:text-4xl shadow-inner border-2 ${isOwner ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
                                     {isOwner ? '👑' : '🧑‍🍳'}
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">{user.name}</h2>
-                                    <div className="flex items-center space-x-2 mt-1">
+                                <div className="min-w-0">
+                                    <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight truncate">{user.name}</h2>
+                                    <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <span className={`px-2.5 py-1 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm ${isOwner ? 'bg-emerald-500' : 'bg-slate-400'}`}>
                                             {displayedRole}
                                         </span>
@@ -77,7 +77,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                                 variant="danger"
                                 size="sm"
                                 onClick={() => setIsConfirming(true)}
-                                className="text-[9px] uppercase tracking-[0.15em] px-3 py-2 rounded-xl opacity-40 hover:opacity-100 transition-opacity"
+                                className="text-[9px] uppercase tracking-[0.15em] px-3 py-2 rounded-xl opacity-40 hover:opacity-100 transition-opacity shrink-0"
                             >
                                 <span className="hidden sm:inline">Delete Account</span>
                                 <span className="sm:hidden text-base">🗑️</span>
