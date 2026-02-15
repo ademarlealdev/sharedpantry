@@ -43,7 +43,7 @@ export const PantrySwitcher: React.FC = () => {
                     </svg>
                 </div>
                 <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">
-                    Tap to Switch Spaces
+                    Tap to change pantries
                 </p>
             </button>
 
@@ -58,8 +58,8 @@ export const PantrySwitcher: React.FC = () => {
                                 key={pantry.id}
                                 onClick={() => handleSwitch(pantry.id)}
                                 className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all ${state.activePantryId === pantry.id
-                                        ? 'bg-emerald-50 text-emerald-700'
-                                        : 'hover:bg-slate-50 text-slate-600'
+                                    ? 'bg-emerald-50 text-emerald-700'
+                                    : 'hover:bg-slate-50 text-slate-600'
                                     }`}
                             >
                                 <div className="flex items-center space-x-3">

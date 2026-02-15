@@ -56,7 +56,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             🏠
           </div>
           <h1 className="text-4xl font-[900] text-slate-900 tracking-tighter mb-2">
-            {isRegistering ? 'Create Account' : 'Welcome Back'}
+            {isRegistering ? 'Create Account' : 'Welcome'}
           </h1>
           <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
             {isRegistering ? 'Join your family pantry' : 'Manage your kitchen together'}
