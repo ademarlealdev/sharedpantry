@@ -17,6 +17,32 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please enter your email address first");
+      return;
+    }
+
+    setIsResetting(true);
+    setError(null);
+
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (resetError) throw resetError;
+      setResetSent(true);
+      setError("Password reset email sent! Check your inbox.");
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset email");
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,11 +81,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="min-h-full flex flex-col items-center justify-center px-8 py-12">
         <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center space-x-4 mb-8">
-              <div className="w-20 h-20 bg-white rounded-[2rem] shadow-xl shadow-[#8B5E3C]/5 flex items-center justify-center text-4xl soft-bounce">
-                🏠
-              </div>
-              <PantryLogo className="w-20 h-20 rounded-[2rem] shadow-xl shadow-[#8B5E3C]/5 soft-bounce" />
+            <div className="flex items-center justify-center mb-8">
+              <PantryLogo className="w-20 h-20" />
             </div>
             <h1 className="text-4xl font-[900] text-slate-900 tracking-tighter mb-2">
               {isRegistering ? 'Create Account' : 'Welcome to SharedPantry'}
@@ -139,6 +162,19 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 {isRegistering ? 'Create Account' : 'Sign In'}
               </Button>
             </div>
+
+            {!isRegistering && (
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={isResetting}
+                  className="text-[10px] font-black text-slate-400 hover:text-[#4C6B51] uppercase tracking-widest transition-colors"
+                >
+                  {isResetting ? 'Sending...' : 'Forgot Password?'}
+                </button>
+              </div>
+            )}
           </form>
 
           <div className="mt-8 text-center space-y-6">

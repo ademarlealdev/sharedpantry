@@ -552,86 +552,26 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteAccount = useCallback(async () => {
     try {
-      const userId = state.user?.id;
-      if (!userId) throw new Error("No user logged in");
+      console.log("[SyncStore] Calling delete_own_user RPC...");
 
-      console.log("[SyncStore] Starting account deletion for user:", userId);
+      // The RPC function handles all deletion (pantries, members, profile, auth user)
+      const { error } = await supabase.rpc('delete_own_user');
 
-      // Step 1: Get all pantries where user is the creator
-      const { data: userPantries, error: pantriesError } = await supabase
-        .from('pantries')
-        .select('id')
-        .eq('created_by', userId);
-
-      if (pantriesError) {
-        console.error("[SyncStore] Error fetching user pantries:", pantriesError);
-      } else if (userPantries && userPantries.length > 0) {
-        // Delete all pantries created by this user (cascades to items and members)
-        const pantryIds = userPantries.map(p => p.id);
-        const { error: deletePantriesError } = await supabase
-          .from('pantries')
-          .delete()
-          .in('id', pantryIds);
-
-        if (deletePantriesError) {
-          console.error("[SyncStore] Error deleting pantries:", deletePantriesError);
-        } else {
-          console.log("[SyncStore] Deleted", pantryIds.length, "pantries");
-        }
+      if (error) {
+        console.error("[SyncStore] RPC error:", error);
+        throw new Error(error.message || "Failed to delete account");
       }
 
-      // Step 2: Remove user from all other pantries
-      const { error: memberError } = await supabase
-        .from('pantry_members')
-        .delete()
-        .eq('user_id', userId);
+      console.log("[SyncStore] Account deleted successfully");
 
-      if (memberError) {
-        console.error("[SyncStore] Error removing from pantries:", memberError);
-      } else {
-        console.log("[SyncStore] Removed user from all pantries");
-      }
-
-      // Step 3: Delete profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (profileError) {
-        console.error("[SyncStore] Error deleting profile:", profileError);
-      } else {
-        console.log("[SyncStore] Deleted user profile");
-      }
-
-      // Step 4: Try to delete auth user via RPC (if function exists)
-      const { error: rpcError } = await supabase.rpc('delete_own_user');
-
-      if (rpcError) {
-        console.warn("[SyncStore] RPC delete failed (function may not exist):", rpcError);
-        // Fallback: Use admin API to delete user
-        const { error: adminError } = await supabase.auth.admin.deleteUser(userId);
-
-        if (adminError) {
-          console.error("[SyncStore] Admin delete also failed:", adminError);
-          // Last resort: just sign out
-          console.log("[SyncStore] Proceeding with logout only");
-        } else {
-          console.log("[SyncStore] User deleted via admin API");
-        }
-      } else {
-        console.log("[SyncStore] User deleted via RPC");
-      }
-
-      // Step 5: Sign out and reset state
+      // Sign out and reset state
       await logout();
-      console.log("[SyncStore] Account deletion complete, user logged out");
 
     } catch (err: any) {
       console.error("[SyncStore] Delete account failed:", err);
       throw err;
     }
-  }, [state.user?.id, logout]);
+  }, [logout]);
 
   const value = {
     state, loading, dataLoading, login, logout,
