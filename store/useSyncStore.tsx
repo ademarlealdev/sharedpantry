@@ -74,6 +74,7 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         name: m.pantry.name,
         code: m.pantry.invite_code,
         createdBy: m.pantry.created_by,
+        userRole: m.role as 'Administrator' | 'Member',
         members: []
       }));
 

@@ -38,6 +38,7 @@ export interface FamilyGroup {
   name: string;
   members: FamilyMember[];
   createdBy: string;
+  userRole?: 'Administrator' | 'Member';
 }
 
 export interface AppState {

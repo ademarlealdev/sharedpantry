@@ -129,6 +129,8 @@ const App: React.FC = () => {
         ) : (
           <ProfileView
             user={state.user}
+            pantries={state.pantries}
+            activePantryId={state.activePantryId}
             onLogout={logout}
           />
         )}
