@@ -51,6 +51,7 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   });
 
   const fetchPantries = useCallback(async (userId: string) => {
+    console.log(`[SyncStore] Fetching pantries for user: ${userId}`);
     const { data: members, error: memError } = await supabase
       .from('pantry_members')
       .select(`
@@ -64,7 +65,9 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return [];
     }
 
-    return (members || [])
+    console.log(`[SyncStore] Raw member data fetched:`, members);
+
+    const mapped = (members || [])
       .filter((m: any) => m.pantry)
       .map((m: any) => ({
         id: m.pantry.id,
@@ -73,6 +76,9 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         createdBy: m.pantry.created_by,
         members: []
       }));
+
+    console.log(`[SyncStore] Mapped pantries:`, mapped);
+    return mapped;
   }, []);
 
   // Auth Effect
@@ -247,20 +253,22 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const joinPantry = async (code: string) => {
     if (!state.user) return;
 
-    const cleanCode = code.trim().toUpperCase();
+    const cleanCode = code.trim();
     console.log(`[SyncStore] Attempting to join pantry with code: ${cleanCode}`);
 
-    // Step 1: Find the pantry by code
+    // Step 1: Find the pantry by code (Case-insensitive lookup)
     const { data: pantry, error: pError } = await supabase
       .from('pantries')
       .select('id, name, created_by')
-      .eq('invite_code', cleanCode)
+      .ilike('invite_code', cleanCode)
       .single();
 
     if (pError) {
-      console.error("[SyncStore] Pantry lookup failed:", pError);
-      if (pError.code === 'PGRST116') throw new Error("Invalid invite code. Please check and try again.");
-      throw new Error("Could not find pantry. This might be a permission issue.");
+      console.error("[SyncStore] Pantry lookup failed for code:", cleanCode, pError);
+      if (pError.code === 'PGRST116') {
+        throw new Error("Invalid invite code. Codes are case-insensitive, but please double-check the spelling.");
+      }
+      throw new Error(`Lookup failed: ${pError.message || "Unknown error"}`);
     }
 
     // Step 2: Prevent owner from joining their own pantry via code
@@ -326,28 +334,8 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     console.log(`[SyncStore] Attempting to delete pantry: ${id}`);
 
     try {
-      // Step 1: Delete all items in this pantry
-      const { error: itemError } = await supabase
-        .from('grocery_items')
-        .delete()
-        .eq('pantry_id', id);
-
-      if (itemError) {
-        console.warn("[SyncStore] Warning: Could not clear items. Continuing...", itemError);
-      }
-
-      // Step 2: Delete all members of this pantry
-      const { error: memError } = await supabase
-        .from('pantry_members')
-        .delete()
-        .eq('pantry_id', id);
-
-      if (memError) {
-        console.warn("[SyncStore] Warning: Could not clear members. Continuing...", memError);
-      }
-
-      // Step 3: Delete the pantry itself
-      // We must be the owner to delete it
+      // Step 1: Delete the pantry itself
+      // Foreign keys (items, members) should be set to ON DELETE CASCADE in Supabase
       const { error: pError } = await supabase
         .from('pantries')
         .delete()
@@ -355,7 +343,7 @@ export const SyncStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .eq('created_by', state.user.id);
 
       if (pError) {
-        console.error("[SyncStore] Critical error deleting pantry record:", pError);
+        console.error("[SyncStore] Error deleting pantry record:", pError);
         throw new Error(`Failed to delete pantry: ${pError.message}`);
       }
 
