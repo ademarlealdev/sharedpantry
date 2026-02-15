@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+//
 
 // Polyfill process for browser environment
 // This ensures that access to process.env doesn't crash the app
