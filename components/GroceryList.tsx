@@ -60,13 +60,20 @@ export const GroceryList: React.FC<ListProps> = ({ items, onToggle, onRemove, on
       return;
     }
 
-    // If item added, scroll to bottom
-    if (items.length > prevItemsLength.current) {
+    // Only scroll to bottom if EXACTLY one item was added (manual add)
+    // Avoid scrolling to bottom on initial fetch (large jump in length)
+    if (items.length === prevItemsLength.current + 1) {
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
       }, 100);
+    } else if (items.length !== prevItemsLength.current) {
+      // If items changed but not by exactly 1 (e.g. initial load), 
+      // or if items were removed, just stay at current or top
+      if (prevItemsLength.current === 0 && items.length > 0) {
+        if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      }
     }
     prevItemsLength.current = items.length;
   }, [items.length, state.activePantryId]);
