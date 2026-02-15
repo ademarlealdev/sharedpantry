@@ -65,55 +65,67 @@ const App: React.FC = () => {
                 </svg>
               </Button>
             ) : (
-              <div className="w-11 h-11 flex items-center justify-center">
-                <span className="text-3xl">🏠</span>
+              <div className="w-11 h-11 flex items-center justify-center bg-emerald-50 rounded-2xl shadow-inner border border-emerald-100">
+                <span className="text-2xl">🏠</span>
               </div>
             )}
             <div className="flex flex-col">
               <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none">
-                {view === 'profile' ? 'Settings' : (activePantry?.name || 'SharedPantry')}
+                {view === 'profile' ? 'Settings' : (activePantry?.name || 'My Pantry')}
               </h1>
               <p className="text-[9px] text-emerald-600 font-black uppercase tracking-[0.2em] mt-1">
-                {view === 'profile' ? 'Pantry Management' : 'Shared Collaborative List'}
+                {view === 'profile' ? 'Collaborative Spaces' : 'Shared Grocery List'}
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setView(view === 'list' ? 'profile' : 'list')}
-            className={`w-11 h-11 flex items-center justify-center rounded-full border-2 transition-all active:scale-90 overflow-hidden ${view === 'profile'
+            className={`flex items-center space-x-3 pl-4 pr-1.5 py-1.5 rounded-full border-2 transition-all active:scale-95 ${view === 'profile'
               ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-500/20'
-              : 'border-slate-100 bg-slate-50 hover:border-emerald-200'
+              : 'border-slate-100 bg-white hover:border-emerald-200'
               }`}
           >
-            {view === 'profile' ? (
-              <span className="text-xl">👤</span>
-            ) : (
-              <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xs">
-                {state.user.name[0]}
-              </div>
-            )}
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:inline">
+              {state.user.name}
+            </span>
+            <div className="w-9 h-9 bg-slate-900 flex items-center justify-center text-white font-black text-xs rounded-full shadow-sm">
+              {state.user.name[0]}
+            </div>
           </button>
         </div>
       </header>
 
       <div className="flex-1 flex flex-col min-h-0 relative">
         {view === 'list' ? (
-          <div className="flex-1 flex flex-col min-h-0 animate-in fade-in duration-300">
-            <GroceryList
-              items={state.items}
-              onToggle={toggleItem}
-              onRemove={removeItem}
-              onUpdate={updateItem}
-              onClearBought={clearBought}
-            />
-            <AddBar
-              onAdd={addItem}
-              onUpdate={updateItem}
-              userName={state.user?.name || 'User'}
-              items={state.items}
-            />
-          </div>
+          state.pantries.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
+              <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-5xl shadow-inner">📭</div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">No Pantry Found</h2>
+                <p className="text-slate-500 text-sm max-w-[240px] font-medium leading-relaxed">Create your first pantry or join one with a code to start adding items.</p>
+              </div>
+              <Button onClick={() => setView('profile')} variant="primary" className="px-8 py-4 rounded-3xl">
+                Go to Settings
+              </Button>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col min-h-0 animate-in fade-in duration-300">
+              <GroceryList
+                items={state.items}
+                onToggle={toggleItem}
+                onRemove={removeItem}
+                onUpdate={updateItem}
+                onClearBought={clearBought}
+              />
+              <AddBar
+                onAdd={addItem}
+                onUpdate={updateItem}
+                userName={state.user.name}
+                items={state.items}
+              />
+            </div>
+          )
         ) : (
           <ProfileView
             user={state.user}
