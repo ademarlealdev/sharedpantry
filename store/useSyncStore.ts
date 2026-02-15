@@ -79,28 +79,15 @@ export const useSyncStore = () => {
 
   // Auth Effect
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    let fired = false;
+
+    const handleSession = async (session: any) => {
+      if (fired) return;
+      fired = true;
+
       try {
         if (session?.user) {
           const userId = session.user.id;
-          let userPantries = await fetchPantries(userId);
-
-          let activeId = userPantries.length > 0 ? userPantries[0].id : null;
-          if (!activeId) {
-            try {
-              activeId = await ensureDefaultPantry(userId, userPantries);
-              userPantries = await fetchPantries(userId);
-            } catch (err) {
-              console.error("[SyncStore] Failed to ensure default pantry:", err);
-            }
-          }
-
-          // Deduplicate and filter out nulls just in case
-          const uniquePantries = Array.from(new Map(
-            (userPantries as FamilyGroup[])
-              .filter(p => p && p.id)
-              .map(p => [p.id, p])
-          ).values());
 
           setState(prev => ({
             ...prev,
@@ -108,26 +95,70 @@ export const useSyncStore = () => {
               id: userId,
               name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
               role: 'Administrator'
-            },
-            pantries: uniquePantries,
-            activePantryId: activeId || (uniquePantries.length > 0 ? uniquePantries[0].id : null),
-            isInitialized: true
+            }
           }));
+
+          try {
+            let userPantries = await fetchPantries(userId);
+            let activeId = userPantries.length > 0 ? userPantries[0].id : null;
+
+            if (!activeId) {
+              activeId = await ensureDefaultPantry(userId, userPantries);
+              userPantries = await fetchPantries(userId);
+            }
+
+            const uniquePantries = Array.from(new Map(
+              (userPantries as FamilyGroup[])
+                .filter(p => p && p.id)
+                .map(p => [p.id, p])
+            ).values());
+
+            setState(prev => ({
+              ...prev,
+              pantries: uniquePantries,
+              activePantryId: activeId || (uniquePantries.length > 0 ? uniquePantries[0].id : null),
+              isInitialized: true
+            }));
+          } catch (pantryErr) {
+            console.error("[SyncStore] Background pantry fetch failed:", pantryErr);
+            setState(prev => ({ ...prev, isInitialized: true }));
+          }
         } else {
           setState({ ...INITIAL_STATE, isInitialized: true });
         }
       } catch (err) {
-        console.error("[SyncStore] Auth state change handler failed:", err);
+        console.error("[SyncStore] Session handling failed:", err);
       } finally {
+        setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        handleSession(session);
+      } else if (event === 'SIGNED_OUT') {
+        setState({ ...INITIAL_STATE, isInitialized: true });
         setLoading(false);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setLoading(false);
+      if (session) {
+        handleSession(session);
+      } else {
+        setLoading(false);
+        setState(prev => ({ ...prev, isInitialized: true }));
+      }
     }).catch(() => setLoading(false));
 
-    return () => subscription.unsubscribe();
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [fetchPantries]);
 
   // Data Sync Effect
