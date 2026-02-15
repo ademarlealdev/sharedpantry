@@ -71,7 +71,6 @@ const App: React.FC = () => {
                 </Button>
                 <div className="flex flex-col">
                   <h1 className="text-xl font-[900] text-slate-900 tracking-tighter leading-none">Settings</h1>
-                  <p className="text-[9px] text-[#4C6B51] font-black uppercase tracking-[0.2em] mt-1">SharedPantry</p>
                 </div>
               </div>
             ) : (
